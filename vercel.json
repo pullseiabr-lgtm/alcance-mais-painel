@@ -1,0 +1,30 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "regions": ["gru1"],
+  "functions": {
+    "app/api/magnific/enhance/route.ts": {
+      "maxDuration": 120
+    },
+    "app/api/whatsapp/webhook/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/figueiredo/chat/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/agente/chat/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/editor/chat/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/ifood/chat/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/dev/chat/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}

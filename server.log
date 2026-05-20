@@ -1,0 +1,20 @@
+
+> alcance-plus@1.0.0 dev
+> next dev -p 3001
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3001
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 11.7s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 9.8s (125 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 32.9s (608 modules)
+ GET / 200 in 34454ms
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (101kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+<w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (231kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+ GET / 200 in 449ms
+ GET / 200 in 921ms
+ GET / 200 in 221ms

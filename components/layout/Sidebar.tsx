@@ -1,0 +1,155 @@
+'use client'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+
+type NavItem = {
+  href: string
+  label: string
+  icon: React.ReactNode
+  badge?: number
+  tag?: string
+  tagColor?: string
+}
+
+type NavSection = {
+  sec: string
+  items: NavItem[]
+}
+
+const nav: NavSection[] = [
+  {
+    sec: 'Principal',
+    items: [
+      { href: '/', label: 'Dashboard', icon: <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></> },
+      { href: '/pipeline', label: 'Pipeline', icon: <><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></>, tag: 'Kanban', tagColor: 'var(--al)' },
+    ],
+  },
+  {
+    sec: 'Clientes',
+    items: [
+      { href: '/clientes', label: 'Clientes', icon: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></> },
+      { href: '/propostas', label: 'Propostas', icon: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></>, badge: 3 },
+    ],
+  },
+  {
+    sec: 'Operações',
+    items: [
+      { href: '/projetos', label: 'Projetos', icon: <><rect x="2" y="3" width="6" height="4"/><rect x="9" y="3" width="6" height="4"/><rect x="16" y="3" width="6" height="4"/><rect x="2" y="10" width="6" height="11"/><rect x="9" y="10" width="6" height="7"/><rect x="16" y="10" width="6" height="4"/></> },
+      { href: '/campanhas', label: 'Campanhas', icon: <><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></> },
+      { href: '/calendario', label: 'Calendário', icon: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></> },
+    ],
+  },
+  {
+    sec: 'Gestão',
+    items: [
+      { href: '/financeiro', label: 'Financeiro', icon: <><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></> },
+      { href: '/equipe', label: 'Equipe', icon: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></> },
+      { href: '/relatorios', label: 'Relatórios', icon: <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></> },
+    ],
+  },
+  {
+    sec: 'IA',
+    items: [
+      {
+        href: '/figueiredo',
+        label: 'FIGUEIREDO',
+        icon: <><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/><path d="M12 14v2M10 16h4"/></>,
+        tag: 'Core',
+        tagColor: '#C9A227',
+      },
+      {
+        href: '/agente',
+        label: 'Agente IA',
+        icon: <><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></>,
+        tag: 'Novo',
+        tagColor: 'var(--al)',
+      },
+      {
+        href: '/editor',
+        label: 'Editor de Vídeos',
+        icon: <><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></>,
+        tag: 'Novo',
+        tagColor: '#FF9500',
+      },
+      {
+        href: '/criador-arte',
+        label: 'Criador de Arte',
+        icon: <><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></>,
+        tag: 'Magnific',
+        tagColor: '#00C4B4',
+      },
+      {
+        href: '/ifood',
+        label: 'Expert iFood',
+        icon: <><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></>,
+        tag: 'Novo',
+        tagColor: '#E8002D',
+      },
+      {
+        href: '/dev',
+        label: 'Developer IA',
+        icon: <><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></>,
+        tag: 'Novo',
+        tagColor: '#00D4AA',
+      },
+    ],
+  },
+]
+
+export default function Sidebar() {
+  const path = usePathname()
+
+  return (
+    <aside className="sidebar">
+      <div className="sb-brand">
+        <div className="logo">
+          <div className="logo-box">
+            <span className="logo-n">A</span>
+          </div>
+          <div>
+            <div className="logo-txt">Alcance<span className="logo-plus">+</span></div>
+            <div className="logo-sub">Agência de Marketing</div>
+          </div>
+        </div>
+        <div className="live-badge">
+          <span className="live-dot" />
+          Sistema Ativo
+        </div>
+      </div>
+
+      <nav className="sb-nav">
+        {nav.map(sec => (
+          <div key={sec.sec}>
+            <div className="sb-sec">{sec.sec}</div>
+            {sec.items.map(item => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`ni${path === item.href ? ' act' : ''}`}
+              >
+                <svg viewBox="0 0 24 24">{item.icon}</svg>
+                {item.label}
+                {item.badge ? <span className="ni-badge">{item.badge}</span> : null}
+                {item.tag ? (
+                  <span className="ni-tag" style={{ background: `${item.tagColor}22`, color: item.tagColor }}>
+                    {item.tag}
+                  </span>
+                ) : null}
+              </Link>
+            ))}
+          </div>
+        ))}
+      </nav>
+
+      <div className="sb-foot">
+        <div className="sb-user">
+          <div className="sb-av">AG</div>
+          <div>
+            <div className="sb-nm">Alcance+</div>
+            <div className="sb-rl">Admin da Agência</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  )
+}

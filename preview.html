@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alcance+ | Gestão de Agência</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --al:#00C4B4;--al2:#00E5D2;--bk:#0D0F14;--bk2:#13161E;--bk3:#1A1D28;
+  --bk4:#22263A;--bk5:#2C3150;--gr3:#8892B0;--lgt:#CCD6F6;--wh:#fff;
+  --ok:#22C55E;--wr:#F59E0B;--er:#EF4444;--bl:#3B82F6;--pu:#8B5CF6;
+  --r:8px;--r2:12px;--r3:16px;--tr:all .18s ease;
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bk);color:var(--lgt);display:flex;min-height:100vh;font-size:14px}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;border:none;font-family:inherit}
+input,select,textarea{font-family:inherit}
+
+/* SIDEBAR */
+.sb{width:240px;min-height:100vh;background:var(--bk2);border-right:1px solid var(--bk4);display:flex;flex-direction:column;position:fixed;left:0;top:0;z-index:100}
+.sb-logo{padding:20px 16px 16px;border-bottom:1px solid var(--bk4);display:flex;align-items:center;gap:10px}
+.logo-box{width:36px;height:36px;background:var(--al);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#000;flex-shrink:0}
+.logo-txt{font-size:17px;font-weight:700;color:var(--wh)}
+.logo-txt span{color:var(--al)}
+.sb-nav{flex:1;overflow-y:auto;padding:12px 0}
+.sb-sec{margin-bottom:4px}
+.sb-sec-label{font-size:10px;font-weight:700;color:var(--gr3);text-transform:uppercase;letter-spacing:.08em;padding:8px 16px 4px}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 16px;border-radius:0;cursor:pointer;color:var(--gr3);font-size:13.5px;font-weight:500;transition:var(--tr);border-left:3px solid transparent;position:relative}
+.ni:hover{color:var(--lgt);background:var(--bk3)}
+.ni.act{color:var(--al);background:rgba(0,196,180,.08);border-left-color:var(--al)}
+.ni svg{width:17px;height:17px;flex-shrink:0}
+.sb-footer{padding:14px 16px;border-top:1px solid var(--bk4)}
+.sb-user{display:flex;align-items:center;gap:10px}
+.ava{width:32px;height:32px;border-radius:50%;background:var(--bk5);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--al);flex-shrink:0}
+
+/* MAIN */
+.main{margin-left:240px;flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:var(--bk2);border-bottom:1px solid var(--bk4);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar h1{font-size:17px;font-weight:700;color:var(--wh)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.content{padding:24px;flex:1}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:var(--r);font-size:13px;font-weight:600;transition:var(--tr)}
+.btn-al{background:var(--al);color:#000}
+.btn-al:hover{background:var(--al2)}
+.btn-ghost{background:transparent;color:var(--gr3);border:1px solid var(--bk4)}
+.btn-ghost:hover{color:var(--lgt);border-color:var(--bk5)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.btn-er{background:var(--er);color:#fff}
+
+/* CARDS */
+.card{background:var(--bk3);border:1px solid var(--bk4);border-radius:var(--r2);padding:18px}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.card-hd h3{font-size:14px;font-weight:600;color:var(--wh)}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px}
+.kpi{background:var(--bk3);border:1px solid var(--bk4);border-radius:var(--r2);padding:18px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--al)}
+.kpi-label{font-size:11px;font-weight:600;color:var(--gr3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.kpi-val{font-size:26px;font-weight:800;color:var(--wh);line-height:1}
+.kpi-sub{font-size:11px;color:var(--gr3);margin-top:6px}
+.kpi-ok::before{background:var(--ok)}
+.kpi-wr::before{background:var(--wr)}
+.kpi-er::before{background:var(--er)}
+.kpi-bl::before{background:var(--bl)}
+.kpi-pu::before{background:var(--pu)}
+
+/* GRID LAYOUTS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.g-col{display:flex;flex-direction:column;gap:16px}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{font-size:11px;font-weight:700;color:var(--gr3);text-transform:uppercase;letter-spacing:.06em;padding:10px 12px;text-align:left;border-bottom:1px solid var(--bk4)}
+.tbl td{padding:11px 12px;border-bottom:1px solid rgba(34,38,58,.6);font-size:13px;color:var(--lgt);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--bk4)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;gap:4px}
+.badge-al{background:rgba(0,196,180,.15);color:var(--al)}
+.badge-ok{background:rgba(34,197,94,.15);color:var(--ok)}
+.badge-wr{background:rgba(245,158,11,.15);color:var(--wr)}
+.badge-er{background:rgba(239,68,68,.15);color:var(--er)}
+.badge-bl{background:rgba(59,130,246,.15);color:var(--bl)}
+.badge-pu{background:rgba(139,92,246,.15);color:var(--pu)}
+.badge-gr{background:rgba(136,146,176,.12);color:var(--gr3)}
+
+/* PROGRESS */
+.prog-wrap{display:flex;flex-direction:column;gap:12px}
+.prog-item{}
+.prog-top{display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px}
+.prog-bar{height:6px;background:var(--bk5);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;background:var(--al);transition:width .6s ease}
+.prog-fill.ok{background:var(--ok)}
+.prog-fill.wr{background:var(--wr)}
+.prog-fill.er{background:var(--er)}
+.prog-fill.bl{background:var(--bl)}
+.prog-fill.pu{background:var(--pu)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bk3);border:1px solid var(--bk4);border-radius:var(--r3);width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;transform:translateY(16px);transition:transform .2s}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:20px 22px 16px;border-bottom:1px solid var(--bk4)}
+.modal-hd h3{font-size:16px;font-weight:700;color:var(--wh)}
+.modal-body{padding:22px}
+.modal-ft{display:flex;gap:10px;justify-content:flex-end;padding:16px 22px;border-top:1px solid var(--bk4)}
+.close-btn{background:none;color:var(--gr3);font-size:20px;line-height:1;padding:2px 6px;border-radius:4px}
+.close-btn:hover{color:var(--lgt);background:var(--bk4)}
+
+/* FORM */
+.form-row{margin-bottom:14px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--gr3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.inp{width:100%;background:var(--bk4);border:1px solid var(--bk5);border-radius:var(--r);padding:9px 12px;color:var(--lgt);font-size:13px;transition:var(--tr);outline:none}
+.inp:focus{border-color:var(--al);background:var(--bk2)}
+.inp::placeholder{color:var(--bk5)}
+select.inp option{background:var(--bk3)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* KANBAN */
+.k-board{display:flex;gap:14px;overflow-x:auto;padding-bottom:8px}
+.k-col{background:var(--bk3);border:1px solid var(--bk4);border-radius:var(--r2);min-width:230px;flex:1;display:flex;flex-direction:column}
+.k-col-hd{padding:14px 14px 10px;border-bottom:1px solid var(--bk4);display:flex;align-items:center;justify-content:space-between}
+.k-col-hd span{font-size:12px;font-weight:700;color:var(--gr3);text-transform:uppercase;letter-spacing:.06em}
+.k-col-cnt{padding:0 8px 8px;font-size:11px;background:var(--bk5);border-radius:12px;color:var(--lgt);font-weight:700}
+.k-cards{padding:10px 10px;display:flex;flex-direction:column;gap:8px;flex:1}
+.k-card{background:var(--bk4);border:1px solid var(--bk5);border-radius:var(--r);padding:12px;cursor:pointer;transition:var(--tr)}
+.k-card:hover{border-color:var(--al);background:var(--bk5)}
+.k-card-title{font-size:13px;font-weight:600;color:var(--wh);margin-bottom:6px}
+.k-card-sub{font-size:11px;color:var(--gr3)}
+.k-card-ft{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+
+/* TABS */
+.tabs{display:flex;gap:4px;padding:4px;background:var(--bk4);border-radius:var(--r);width:fit-content}
+.tab{padding:6px 16px;border-radius:6px;font-size:13px;font-weight:600;color:var(--gr3);cursor:pointer;transition:var(--tr)}
+.tab.act{background:var(--bk3);color:var(--wh)}
+.tab:hover:not(.act){color:var(--lgt)}
+
+/* TEAM CARDS */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.team-card{background:var(--bk3);border:1px solid var(--bk4);border-radius:var(--r2);padding:20px;text-align:center;transition:var(--tr)}
+.team-card:hover{border-color:var(--bk5)}
+.team-ava{width:60px;height:60px;border-radius:50%;background:var(--bk5);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--al);margin:0 auto 12px}
+.team-name{font-size:15px;font-weight:700;color:var(--wh);margin-bottom:3px}
+.team-role{font-size:12px;color:var(--gr3);margin-bottom:10px}
+.team-tags{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:10px}
+.team-stat{font-size:11px;color:var(--gr3)}
+
+/* PROPOSAL CARDS */
+.prop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.prop-card{background:var(--bk3);border:1px solid var(--bk4);border-radius:var(--r2);padding:18px;transition:var(--tr)}
+.prop-card:hover{border-color:var(--bk5)}
+.prop-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.prop-client{font-size:15px;font-weight:700;color:var(--wh)}
+.prop-date{font-size:11px;color:var(--gr3)}
+.prop-val{font-size:22px;font-weight:800;color:var(--al);margin-bottom:4px}
+.prop-desc{font-size:12px;color:var(--gr3);margin-bottom:12px}
+.prop-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.prop-ft{display:flex;align-items:center;justify-content:space-between}
+
+/* CALENDAR POSTS */
+.cal-day{margin-bottom:20px}
+.cal-day-label{font-size:12px;font-weight:700;color:var(--gr3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--bk4)}
+.cal-posts{display:flex;flex-direction:column;gap:8px}
+.cal-post{background:var(--bk3);border:1px solid var(--bk4);border-radius:var(--r);padding:12px;display:flex;align-items:center;gap:12px}
+.cal-post-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.cal-post-info{flex:1}
+.cal-post-title{font-size:13px;font-weight:600;color:var(--wh)}
+.cal-post-meta{font-size:11px;color:var(--gr3);margin-top:2px}
+
+/* FILTERS */
+.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter-btn{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:600;background:var(--bk4);color:var(--gr3);cursor:pointer;transition:var(--tr);border:1px solid var(--bk5)}
+.filter-btn.act{background:rgba(0,196,180,.15);color:var(--al);border-color:rgba(0,196,180,.3)}
+.filter-btn:hover:not(.act){color:var(--lgt)}
+
+/* ACTIVITY */
+.act-list{display:flex;flex-direction:column;gap:2px}
+.act-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(34,38,58,.5)}
+.act-item:last-child{border-bottom:none}
+.act-dot{width:8px;height:8px;border-radius:50%;background:var(--al);flex-shrink:0;margin-top:4px}
+.act-txt{flex:1;font-size:13px;color:var(--lgt)}
+.act-time{font-size:11px;color:var(--gr3);flex-shrink:0;margin-top:2px}
+
+/* SCROLL */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bk2)}
+::-webkit-scrollbar-thumb{background:var(--bk5);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--bk4)}
+
+/* UTILS */
+.flex{display:flex}.items-center{align-items:center}.gap-2{gap:8px}.gap-3{gap:12px}
+.mb-1{margin-bottom:4px}.mb-2{margin-bottom:8px}.mb-3{margin-bottom:14px}.mb-4{margin-bottom:20px}
+.text-wh{color:var(--wh)}.text-gr{color:var(--gr3)}.text-al{color:var(--al)}.text-ok{color:var(--ok)}.text-er{color:var(--er)}.text-wr{color:var(--wr)}
+.fw-7{font-weight:700}.fw-6{font-weight:600}.fs-12{font-size:12px}.fs-13{font-size:13px}.fs-11{font-size:11px}
+.mt-3{margin-top:12px}.w-full{width:100%}
+.sep{height:1px;background:var(--bk4);margin:16px 0}
+.empty{text-align:center;padding:40px;color:var(--gr3);font-size:13px}
+.tag-input{display:flex;gap:6px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sb">
+  <div class="sb-logo">
+    <div class="logo-box">A</div>
+    <div class="logo-txt">Alcance<span>+</span></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-sec">
+      <div class="sb-sec-label">Principal</div>
+      <div class="ni act" onclick="go('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-sec-label">Clientes</div>
+      <div class="ni" onclick="go('clientes')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg>
+        Clientes
+      </div>
+      <div class="ni" onclick="go('pipeline')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></svg>
+        Pipeline
+      </div>
+      <div class="ni" onclick="go('propostas')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+        Propostas
+      </div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-sec-label">Operações</div>
+      <div class="ni" onclick="go('projetos')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        Projetos
+      </div>
+      <div class="ni" onclick="go('campanhas')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Campanhas
+      </div>
+      <div class="ni" onclick="go('calendario')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Calendário
+      </div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-sec-label">Gestão</div>
+      <div class="ni" onclick="go('financeiro')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Financeiro
+      </div>
+      <div class="ni" onclick="go('equipe')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Equipe
+      </div>
+      <div class="ni" onclick="go('relatorios')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        Relatórios
+      </div>
+    </div>
+  </nav>
+  <div class="sb-footer">
+    <div class="sb-user">
+      <div class="ava">MA</div>
+      <div>
+        <div class="fw-6 fs-13 text-wh">Maria Alcance</div>
+        <div class="fs-11 text-gr">Diretora</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main" id="main">
+  <div class="topbar">
+    <h1 id="page-title">Dashboard</h1>
+    <div class="topbar-right" id="topbar-right"></div>
+  </div>
+  <div class="content" id="content"></div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal" id="modal">
+    <div class="modal-hd">
+      <h3 id="modal-title">Novo Item</h3>
+      <button class="close-btn" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-ft">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-al" id="modal-save" onclick="saveModal()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const D = {
+  clientes: [
+    {id:1,nome:'TechVision Ltda',contato:'contato@techvision.com.br',setor:'Tecnologia',mensalidade:4500,status:'Ativo',servicos:['SEO','Social Media','ADS']},
+    {id:2,nome:'ModaStyle S/A',contato:'mkt@modastyle.com.br',setor:'Moda',mensalidade:6200,status:'Ativo',servicos:['Branding','Conteúdo','ADS']},
+    {id:3,nome:'Sabor & Arte',contato:'contato@saborarte.com.br',setor:'Alimentação',mensalidade:2800,status:'Ativo',servicos:['Social Media','Fotografia']},
+    {id:4,nome:'Construmax',contato:'mkt@construmax.com',setor:'Construção',mensalidade:3400,status:'Ativo',servicos:['SEO','ADS','Site']},
+    {id:5,nome:'FitLife Academia',contato:'social@fitlife.com.br',setor:'Fitness',mensalidade:2200,status:'Pausado',servicos:['Social Media','ADS']},
+    {id:6,nome:'JurisPro',contato:'mkt@jurispro.adv.br',setor:'Jurídico',mensalidade:5100,status:'Ativo',servicos:['Conteúdo','SEO','LinkedIn']},
+    {id:7,nome:'EduFuture',contato:'parceiros@edufuture.com.br',setor:'Educação',mensalidade:3800,status:'Ativo',servicos:['ADS','Email Mkt','Social Media']},
+    {id:8,nome:'AutoPeças Norte',contato:'comercial@autopecas.com.br',setor:'Automotivo',mensalidade:1900,status:'Inativo',servicos:['Social Media']},
+  ],
+  projetos: [
+    {id:1,nome:'Rebranding TechVision',cliente:'TechVision Ltda',status:'Em Andamento',prazo:'2026-06-15',progresso:62,prioridade:'Alta'},
+    {id:2,nome:'Campanha Verão ModaStyle',cliente:'ModaStyle S/A',status:'Revisão',prazo:'2026-05-30',progresso:88,prioridade:'Alta'},
+    {id:3,nome:'Site Institucional Construmax',cliente:'Construmax',status:'Planejamento',prazo:'2026-07-01',progresso:15,prioridade:'Média'},
+    {id:4,nome:'Social Media Sabor & Arte',cliente:'Sabor & Arte',status:'Concluído',prazo:'2026-05-10',progresso:100,prioridade:'Normal'},
+    {id:5,nome:'SEO JurisPro Q2',cliente:'JurisPro',status:'Em Andamento',prazo:'2026-06-30',progresso:45,prioridade:'Média'},
+    {id:6,nome:'ADS EduFuture Matrícula',cliente:'EduFuture',status:'Em Andamento',prazo:'2026-05-20',progresso:70,prioridade:'Alta'},
+    {id:7,nome:'Email Marketing FitLife',cliente:'FitLife Academia',status:'Planejamento',prazo:'2026-06-10',progresso:5,prioridade:'Baixa'},
+  ],
+  campanhas: [
+    {id:1,nome:'Google ADS TechVision',cliente:'TechVision Ltda',canal:'Google ADS',orcamento:5000,gasto:3240,ctr:4.8,cpa:32.5,status:'Ativa',leads:99},
+    {id:2,nome:'Meta Verão ModaStyle',cliente:'ModaStyle S/A',canal:'Meta ADS',orcamento:8000,gasto:6100,ctr:3.2,cpa:45.0,status:'Ativa',leads:135},
+    {id:3,nome:'LinkedIn JurisPro',cliente:'JurisPro',canal:'LinkedIn ADS',orcamento:3500,gasto:1800,ctr:1.9,cpa:78.0,status:'Ativa',leads:23},
+    {id:4,nome:'TikTok FitLife',cliente:'FitLife Academia',canal:'TikTok ADS',orcamento:2000,gasto:2000,ctr:6.1,cpa:22.0,status:'Pausada',leads:90},
+    {id:5,nome:'Email Mkt EduFuture',cliente:'EduFuture',canal:'Email',orcamento:800,gasto:620,ctr:28.4,cpa:8.5,status:'Ativa',leads:73},
+    {id:6,nome:'SEO Construmax',cliente:'Construmax',canal:'SEO',orcamento:1500,gasto:900,ctr:null,cpa:null,status:'Ativa',leads:12},
+  ],
+  financeiro: [
+    {id:1,tipo:'receita',descricao:'Mensalidade TechVision',valor:4500,data:'2026-05-01',categoria:'Mensalidade',cliente:'TechVision Ltda'},
+    {id:2,tipo:'receita',descricao:'Mensalidade ModaStyle',valor:6200,data:'2026-05-01',categoria:'Mensalidade',cliente:'ModaStyle S/A'},
+    {id:3,tipo:'despesa',descricao:'Licença Adobe Creative',valor:890,data:'2026-05-02',categoria:'Software',cliente:''},
+    {id:4,tipo:'receita',descricao:'Projeto Site Construmax',valor:8500,data:'2026-05-05',categoria:'Projeto',cliente:'Construmax'},
+    {id:5,tipo:'despesa',descricao:'Freelancer Designer',valor:2200,data:'2026-05-08',categoria:'Pessoal',cliente:''},
+    {id:6,tipo:'receita',descricao:'Mensalidade JurisPro',valor:5100,data:'2026-05-10',categoria:'Mensalidade',cliente:'JurisPro'},
+    {id:7,tipo:'despesa',descricao:'Aluguel Escritório',valor:3500,data:'2026-05-10',categoria:'Infraestrutura',cliente:''},
+    {id:8,tipo:'receita',descricao:'Mensalidade EduFuture',valor:3800,data:'2026-05-12',categoria:'Mensalidade',cliente:'EduFuture'},
+    {id:9,tipo:'despesa',descricao:'Internet + Telefonia',valor:350,data:'2026-05-12',categoria:'Infraestrutura',cliente:''},
+    {id:10,tipo:'receita',descricao:'Consultoria Estratégica',valor:4200,data:'2026-05-13',categoria:'Consultoria',cliente:'FitLife Academia'},
+  ],
+  equipe: [
+    {id:1,nome:'Maria Alcance',cargo:'Diretora de Marketing',espec:['Estratégia','Branding','Growth'],projetos:5,email:'maria@alcance.com.br',nivel:'Sênior'},
+    {id:2,nome:'Carlos Mendes',cargo:'Designer Gráfico',espec:['UI/UX','Motion','Branding'],projetos:4,email:'carlos@alcance.com.br',nivel:'Pleno'},
+    {id:3,nome:'Julia Santos',cargo:'Gestora de Tráfego',espec:['Google ADS','Meta ADS','Analytics'],projetos:6,email:'julia@alcance.com.br',nivel:'Sênior'},
+    {id:4,nome:'Pedro Lima',cargo:'Redator SEO',espec:['SEO','Copywriting','Blog'],projetos:3,email:'pedro@alcance.com.br',nivel:'Pleno'},
+    {id:5,nome:'Ana Costa',cargo:'Social Media',espec:['Instagram','TikTok','Conteúdo'],projetos:5,email:'ana@alcance.com.br',nivel:'Júnior'},
+    {id:6,nome:'Rafael Souza',cargo:'Desenvolvedor Web',espec:['React','WordPress','SEO Técnico'],projetos:2,email:'rafael@alcance.com.br',nivel:'Pleno'},
+  ],
+  pipeline: [
+    {id:1,empresa:'Clínica Bem Estar',contato:'Dr. Paulo',valor:4800,etapa:'Prospecção',probabilidade:20,dataUlt:'2026-05-10'},
+    {id:2,empresa:'Imobiliária Horizonte',contato:'Sandra Melo',valor:7500,etapa:'Qualificação',probabilidade:40,dataUlt:'2026-05-11'},
+    {id:3,empresa:'Restaurante Gourmet',contato:'Chef Bruno',valor:2500,etapa:'Proposta',probabilidade:60,dataUlt:'2026-05-12'},
+    {id:4,empresa:'PetShop Patinhas',contato:'Camila Reis',valor:3200,etapa:'Negociação',probabilidade:80,dataUlt:'2026-05-12'},
+    {id:5,empresa:'Advocacia Fonseca',contato:'Dr. Fonseca',valor:6000,etapa:'Negociação',probabilidade:75,dataUlt:'2026-05-13'},
+    {id:6,empresa:'Academia PowerFit',contato:'Marcos A.',valor:3800,etapa:'Qualificação',probabilidade:35,dataUlt:'2026-05-09'},
+    {id:7,empresa:'Loja Eletrônicos ZAP',contato:'Fernando N.',valor:5500,etapa:'Proposta',probabilidade:55,dataUlt:'2026-05-13'},
+    {id:8,empresa:'Salão Glamour',contato:'Patricia O.',valor:1800,etapa:'Fechado',probabilidade:100,dataUlt:'2026-05-11'},
+  ],
+  calendario: [
+    {id:1,titulo:'Post Produto Novo - ModaStyle',data:'2026-05-13',hora:'09:00',canal:'Instagram',status:'Agendado',cliente:'ModaStyle S/A'},
+    {id:2,titulo:'Reels Receita - Sabor & Arte',data:'2026-05-13',hora:'11:00',canal:'Instagram',status:'Agendado',cliente:'Sabor & Arte'},
+    {id:3,titulo:'Artigo SEO "Advocacia Digital"',data:'2026-05-13',hora:'14:00',canal:'Blog',status:'Rascunho',cliente:'JurisPro'},
+    {id:4,titulo:'Story Promoção - FitLife',data:'2026-05-14',hora:'08:00',canal:'Instagram',status:'Agendado',cliente:'FitLife Academia'},
+    {id:5,titulo:'Post LinkedIn - TechVision',data:'2026-05-14',hora:'10:00',canal:'LinkedIn',status:'Agendado',cliente:'TechVision Ltda'},
+    {id:6,titulo:'Email Matrícula - EduFuture',data:'2026-05-14',hora:'12:00',canal:'Email',status:'Revisão',cliente:'EduFuture'},
+    {id:7,titulo:'TikTok Treino - FitLife',data:'2026-05-15',hora:'09:00',canal:'TikTok',status:'Agendado',cliente:'FitLife Academia'},
+    {id:8,titulo:'Carrossel Projeto - Construmax',data:'2026-05-15',hora:'16:00',canal:'Instagram',status:'Rascunho',cliente:'Construmax'},
+  ],
+  relatorios: [
+    {id:1,cliente:'TechVision Ltda',periodo:'Abril/2026',alcance:48200,engajamento:'4.2%',conversoes:127,leads:89,enviado:'2026-05-02',status:'Enviado'},
+    {id:2,cliente:'ModaStyle S/A',periodo:'Abril/2026',alcance:142000,engajamento:'5.8%',conversoes:340,leads:210,enviado:'2026-05-03',status:'Enviado'},
+    {id:3,cliente:'JurisPro',periodo:'Abril/2026',alcance:18700,engajamento:'2.1%',conversoes:42,leads:28,enviado:'2026-05-04',status:'Enviado'},
+    {id:4,cliente:'EduFuture',periodo:'Abril/2026',alcance:62000,engajamento:'3.9%',conversoes:186,leads:124,enviado:'2026-05-05',status:'Enviado'},
+    {id:5,cliente:'FitLife Academia',periodo:'Abril/2026',alcance:31000,engajamento:'6.4%',conversoes:95,leads:67,enviado:null,status:'Pendente'},
+    {id:6,cliente:'Sabor & Arte',periodo:'Abril/2026',alcance:22400,engajamento:'7.2%',conversoes:88,leads:0,enviado:null,status:'Em Preparo'},
+  ],
+  propostas: [
+    {id:1,cliente:'Clínica Bem Estar',valor:4800,desconto:0,status:'Enviada',servicos:['Social Media','ADS','Conteúdo'],data:'2026-05-10',validade:'2026-05-25'},
+    {id:2,cliente:'Imobiliária Horizonte',valor:9200,desconto:8,status:'Em Negociação',servicos:['Branding','Site','SEO','ADS'],data:'2026-05-08',validade:'2026-05-22'},
+    {id:3,cliente:'Restaurante Gourmet',valor:3200,desconto:5,status:'Aprovada',servicos:['Social Media','Fotografia'],data:'2026-05-05',validade:'2026-05-19'},
+    {id:4,cliente:'PetShop Patinhas',valor:2800,desconto:0,status:'Em Negociação',servicos:['Social Media','ADS'],data:'2026-05-12',validade:'2026-05-26'},
+    {id:5,cliente:'Loja Eletrônicos ZAP',valor:5500,desconto:10,status:'Enviada',servicos:['Google ADS','SEO','Email Mkt'],data:'2026-05-13',validade:'2026-05-27'},
+    {id:6,cliente:'Academia PowerFit',valor:4100,desconto:0,status:'Rascunho',servicos:['Social Media','ADS','Conteúdo'],data:'2026-05-09',validade:'2026-05-23'},
+  ],
+};
+
+let currentPage = 'dashboard';
+let currentModal = null;
+let nextId = 100;
+let projetoView = 'lista';
+let campFiltro = 'Todos';
+
+// ============================================================
+// ROUTER
+// ============================================================
+function go(page) {
+  currentPage = page;
+  document.querySelectorAll('.ni').forEach(n => n.classList.remove('act'));
+  document.querySelectorAll('.ni').forEach(n => {
+    if(n.getAttribute('onclick') && n.getAttribute('onclick').includes(`'${page}'`)) n.classList.add('act');
+  });
+  render();
+}
+
+function render() {
+  const titles = {
+    dashboard:'Dashboard',clientes:'Clientes',projetos:'Projetos',campanhas:'Campanhas',
+    financeiro:'Financeiro',equipe:'Equipe',pipeline:'Pipeline',calendario:'Calendário',
+    relatorios:'Relatórios',propostas:'Propostas'
+  };
+  const btnLabels = {
+    clientes:'Novo Cliente',projetos:'Novo Projeto',campanhas:'Nova Campanha',
+    financeiro:'Nova Transação',equipe:'Novo Membro',pipeline:'Novo Lead',
+    calendario:'Novo Post',relatorios:'Novo Relatório',propostas:'Nova Proposta'
+  };
+  document.getElementById('page-title').textContent = titles[currentPage] || currentPage;
+  const tr = document.getElementById('topbar-right');
+  if(currentPage !== 'dashboard') {
+    tr.innerHTML = `<button class="btn btn-al" onclick="openModal('${currentPage}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>${btnLabels[currentPage]||'Novo'}</button>`;
+  } else {
+    tr.innerHTML = `<span class="fs-12 text-gr">Hoje, 13 Mai 2026</span>`;
+  }
+  const pages = {
+    dashboard: renderDashboard,
+    clientes: renderClientes,
+    projetos: renderProjetos,
+    campanhas: renderCampanhas,
+    financeiro: renderFinanceiro,
+    equipe: renderEquipe,
+    pipeline: renderPipeline,
+    calendario: renderCalendario,
+    relatorios: renderRelatorios,
+    propostas: renderPropostas,
+  };
+  document.getElementById('content').innerHTML = (pages[currentPage] || (() => '<div class="empty">Em breve</div>'))();
+  bindEvents();
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard() {
+  const totalRec = D.financeiro.filter(t=>t.tipo==='receita').reduce((a,b)=>a+b.valor,0);
+  return `
+  <div class="kpi-grid">
+    <div class="kpi kpi-al"><div class="kpi-label">Receita Mensal</div><div class="kpi-val">R$ 84.500</div><div class="kpi-sub">↑ 12% vs mês anterior</div></div>
+    <div class="kpi kpi-ok"><div class="kpi-label">Clientes Ativos</div><div class="kpi-val">23</div><div class="kpi-sub">+2 novos este mês</div></div>
+    <div class="kpi kpi-bl"><div class="kpi-label">Projetos em Andamento</div><div class="kpi-val">14</div><div class="kpi-sub">3 para entrega esta semana</div></div>
+    <div class="kpi kpi-pu"><div class="kpi-label">Leads Gerados</div><div class="kpi-val">342</div><div class="kpi-sub">↑ 28% vs mês anterior</div></div>
+  </div>
+  <div class="grid-2 mb-4">
+    <div class="card">
+      <div class="card-hd"><h3>Clientes Recentes</h3><span class="fs-11 text-gr">Últimos 30 dias</span></div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Cliente</th><th>Setor</th><th>Mensalidade</th><th>Status</th></tr></thead>
+          <tbody>
+            ${D.clientes.slice(0,5).map(c=>`<tr>
+              <td class="text-wh fw-6">${c.nome}</td>
+              <td>${c.setor}</td>
+              <td class="text-al">R$ ${c.mensalidade.toLocaleString('pt-BR')}</td>
+              <td>${statusBadge(c.status)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h3>Atividades Recentes</h3></div>
+      <div class="act-list">
+        <div class="act-item"><div class="act-dot" style="background:var(--ok)"></div><div class="act-txt">Proposta aprovada — Restaurante Gourmet</div><div class="act-time">há 2h</div></div>
+        <div class="act-item"><div class="act-dot" style="background:var(--al)"></div><div class="act-txt">Novo lead captado — Academia PowerFit</div><div class="act-time">há 3h</div></div>
+        <div class="act-item"><div class="act-dot" style="background:var(--bl)"></div><div class="act-txt">Relatório enviado — ModaStyle S/A</div><div class="act-time">há 5h</div></div>
+        <div class="act-item"><div class="act-dot" style="background:var(--wr)"></div><div class="act-txt">Projeto em revisão — Campanha Verão</div><div class="act-time">há 6h</div></div>
+        <div class="act-item"><div class="act-dot" style="background:var(--pu)"></div><div class="act-txt">Novo contrato assinado — JurisPro</div><div class="act-time">há 1d</div></div>
+        <div class="act-item"><div class="act-dot"></div><div class="act-txt">Campanha otimizada — Google ADS TechVision</div><div class="act-time">há 1d</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="grid-2 mb-4">
+    <div class="card">
+      <div class="card-hd"><h3>Funil de Vendas</h3></div>
+      <div class="prog-wrap">
+        <div class="prog-item"><div class="prog-top"><span>Prospecção</span><span class="text-wh fw-6">24 leads</span></div><div class="prog-bar"><div class="prog-fill" style="width:100%"></div></div></div>
+        <div class="prog-item"><div class="prog-top"><span>Qualificação</span><span class="text-wh fw-6">18 leads</span></div><div class="prog-bar"><div class="prog-fill bl" style="width:75%"></div></div></div>
+        <div class="prog-item"><div class="prog-top"><span>Proposta</span><span class="text-wh fw-6">11 leads</span></div><div class="prog-bar"><div class="prog-fill pu" style="width:46%"></div></div></div>
+        <div class="prog-item"><div class="prog-top"><span>Negociação</span><span class="text-wh fw-6">7 leads</span></div><div class="prog-bar"><div class="prog-fill wr" style="width:29%"></div></div></div>
+        <div class="prog-item"><div class="prog-top"><span>Fechamento</span><span class="text-wh fw-6">3 leads</span></div><div class="prog-bar"><div class="prog-fill ok" style="width:12%"></div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h3>Receita por Canal</h3></div>
+      <div class="prog-wrap">
+        <div class="prog-item"><div class="prog-top"><span>Social Media</span><span class="text-wh fw-6">R$ 28.400</span></div><div class="prog-bar"><div class="prog-fill" style="width:88%"></div></div></div>
+        <div class="prog-item"><div class="prog-top"><span>Google ADS</span><span class="text-wh fw-6">R$ 21.200</span></div><div class="prog-bar"><div class="prog-fill bl" style="width:66%"></div></div></div>
+        <div class="prog-item"><div class="prog-top"><span>SEO</span><span class="text-wh fw-6">R$ 14.800</span></div><div class="prog-bar"><div class="prog-fill pu" style="width:46%"></div></div></div>
+        <div class="prog-item"><div class="prog-top"><span>Branding</span><span class="text-wh fw-6">R$ 12.100</span></div><div class="prog-bar"><div class="prog-fill wr" style="width:38%"></div></div></div>
+        <div class="prog-item"><div class="prog-top"><span>Sites & Dev</span><span class="text-wh fw-6">R$ 8.000</span></div><div class="prog-bar"><div class="prog-fill ok" style="width:25%"></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h3>Metas do Mês — Maio/2026</h3><span class="badge badge-wr">Em andamento</span></div>
+    <div class="grid-3">
+      <div>
+        <div class="fs-12 text-gr mb-2">Receita</div>
+        <div class="fw-7 text-wh fs-13 mb-2">R$ 84.500 / R$ 90.000</div>
+        <div class="prog-bar"><div class="prog-fill ok" style="width:94%"></div></div>
+        <div class="fs-11 text-gr mt-3">94% da meta</div>
+      </div>
+      <div>
+        <div class="fs-12 text-gr mb-2">Novos Clientes</div>
+        <div class="fw-7 text-wh fs-13 mb-2">2 / 3</div>
+        <div class="prog-bar"><div class="prog-fill wr" style="width:67%"></div></div>
+        <div class="fs-11 text-gr mt-3">67% da meta</div>
+      </div>
+      <div>
+        <div class="fs-12 text-gr mb-2">Leads Gerados</div>
+        <div class="fw-7 text-wh fs-13 mb-2">342 / 300</div>
+        <div class="prog-bar"><div class="prog-fill" style="width:100%"></div></div>
+        <div class="fs-11 text-gr mt-3">114% da meta ✓</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// CLIENTES
+// ============================================================
+function renderClientes() {
+  return `
+  <div class="card">
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Nome</th><th>Contato</th><th>Setor</th><th>Mensalidade</th><th>Status</th><th>Serviços</th><th></th></tr></thead>
+        <tbody id="clientes-tbody">
+          ${D.clientes.map(c => `<tr>
+            <td class="text-wh fw-6">${c.nome}</td>
+            <td class="text-gr fs-12">${c.contato}</td>
+            <td>${c.setor}</td>
+            <td class="text-al fw-6">R$ ${c.mensalidade.toLocaleString('pt-BR')}</td>
+            <td>${statusBadge(c.status)}</td>
+            <td>${c.servicos.map(s=>`<span class="badge badge-gr" style="margin-right:3px">${s}</span>`).join('')}</td>
+            <td><button class="btn btn-ghost btn-sm" onclick="editCliente(${c.id})">Editar</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// PROJETOS
+// ============================================================
+function renderProjetos() {
+  const cols = ['Planejamento','Em Andamento','Revisão','Concluído'];
+  const colColors = {Planejamento:'var(--gr3)','Em Andamento':'var(--al)',Revisão:'var(--wr)',Concluído:'var(--ok)'};
+  return `
+  <div class="flex gap-2 mb-3">
+    <div class="tabs">
+      <div class="tab ${projetoView==='lista'?'act':''}" onclick="setProjetoView('lista')">Lista</div>
+      <div class="tab ${projetoView==='kanban'?'act':''}" onclick="setProjetoView('kanban')">Kanban</div>
+    </div>
+  </div>
+  ${projetoView==='lista' ? `
+  <div class="card">
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Projeto</th><th>Cliente</th><th>Status</th><th>Prazo</th><th>Progresso</th><th>Prioridade</th></tr></thead>
+        <tbody>
+          ${D.projetos.map(p=>`<tr>
+            <td class="text-wh fw-6">${p.nome}</td>
+            <td class="text-gr">${p.cliente}</td>
+            <td>${statusProj(p.status)}</td>
+            <td class="fs-12">${fmtDate(p.prazo)}</td>
+            <td style="min-width:120px">
+              <div class="flex items-center gap-2">
+                <div class="prog-bar" style="flex:1"><div class="prog-fill ${p.progresso===100?'ok':p.progresso>60?'':'wr'}" style="width:${p.progresso}%"></div></div>
+                <span class="fs-11 text-gr">${p.progresso}%</span>
+              </div>
+            </td>
+            <td>${prioridadeBadge(p.prioridade)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>` : `
+  <div class="k-board">
+    ${cols.map(col=>{
+      const cards = D.projetos.filter(p=>p.status===col);
+      return `<div class="k-col">
+        <div class="k-col-hd">
+          <span style="color:${colColors[col]}">${col}</span>
+          <div class="k-col-cnt">${cards.length}</div>
+        </div>
+        <div class="k-cards">
+          ${cards.map(p=>`<div class="k-card">
+            <div class="k-card-title">${p.nome}</div>
+            <div class="k-card-sub">${p.cliente}</div>
+            <div class="prog-bar" style="margin-top:8px"><div class="prog-fill ${p.progresso===100?'ok':''}" style="width:${p.progresso}%"></div></div>
+            <div class="k-card-ft">
+              <span class="fs-11 text-gr">${p.progresso}%</span>
+              ${prioridadeBadge(p.prioridade)}
+            </div>
+          </div>`).join('')}
+          ${cards.length===0?'<div class="empty" style="padding:20px">Nenhum projeto</div>':''}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`}`;
+}
+
+function setProjetoView(v) { projetoView = v; render(); }
+
+// ============================================================
+// CAMPANHAS
+// ============================================================
+function renderCampanhas() {
+  const filtros = ['Todos','Ativa','Pausada','Encerrada'];
+  const filtered = campFiltro==='Todos' ? D.campanhas : D.campanhas.filter(c=>c.status===campFiltro);
+  return `
+  <div class="filter-bar">
+    ${filtros.map(f=>`<div class="filter-btn ${campFiltro===f?'act':''}" onclick="setCampFiltro('${f}')">${f}</div>`).join('')}
+  </div>
+  <div class="card">
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Campanha</th><th>Canal</th><th>Orçamento</th><th>Gasto</th><th>CTR</th><th>CPA</th><th>Leads</th><th>Status</th></tr></thead>
+        <tbody>
+          ${filtered.map(c=>`<tr>
+            <td>
+              <div class="text-wh fw-6">${c.nome}</div>
+              <div class="fs-11 text-gr">${c.cliente}</div>
+            </td>
+            <td>${canalBadge(c.canal)}</td>
+            <td>
+              <div class="fs-12">R$ ${c.orcamento.toLocaleString('pt-BR')}</div>
+              <div class="prog-bar" style="margin-top:4px;width:80px"><div class="prog-fill ${c.gasto/c.orcamento>0.9?'er':c.gasto/c.orcamento>0.7?'wr':'ok'}" style="width:${Math.round(c.gasto/c.orcamento*100)}%"></div></div>
+            </td>
+            <td class="${c.gasto/c.orcamento>0.9?'text-er':'text-wr'}">R$ ${c.gasto.toLocaleString('pt-BR')}</td>
+            <td>${c.ctr!==null?c.ctr+'%':'—'}</td>
+            <td>${c.cpa!==null?'R$ '+c.cpa:'—'}</td>
+            <td class="text-al fw-6">${c.leads}</td>
+            <td>${statusCamp(c.status)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+function setCampFiltro(f) { campFiltro = f; render(); }
+
+// ============================================================
+// FINANCEIRO
+// ============================================================
+function renderFinanceiro() {
+  const rec = D.financeiro.filter(t=>t.tipo==='receita').reduce((a,b)=>a+b.valor,0);
+  const des = D.financeiro.filter(t=>t.tipo==='despesa').reduce((a,b)=>a+b.valor,0);
+  const margem = Math.round((rec-des)/rec*100);
+  return `
+  <div class="kpi-grid mb-4">
+    <div class="kpi kpi-ok"><div class="kpi-label">Receita Total</div><div class="kpi-val">R$ ${rec.toLocaleString('pt-BR')}</div><div class="kpi-sub">${D.financeiro.filter(t=>t.tipo==='receita').length} transações</div></div>
+    <div class="kpi kpi-er"><div class="kpi-label">Despesas</div><div class="kpi-val">R$ ${des.toLocaleString('pt-BR')}</div><div class="kpi-sub">${D.financeiro.filter(t=>t.tipo==='despesa').length} transações</div></div>
+    <div class="kpi kpi-al"><div class="kpi-label">Lucro Líquido</div><div class="kpi-val">R$ ${(rec-des).toLocaleString('pt-BR')}</div><div class="kpi-sub">Saldo do período</div></div>
+    <div class="kpi kpi-bl"><div class="kpi-label">Margem Líquida</div><div class="kpi-val">${margem}%</div><div class="kpi-sub">Meta: 60%</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h3>Transações — Maio 2026</h3></div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Data</th><th>Descrição</th><th>Categoria</th><th>Cliente</th><th>Valor</th></tr></thead>
+        <tbody>
+          ${D.financeiro.sort((a,b)=>b.data.localeCompare(a.data)).map(t=>`<tr>
+            <td class="fs-12 text-gr">${fmtDate(t.data)}</td>
+            <td class="text-wh fw-6">${t.descricao}</td>
+            <td><span class="badge badge-gr">${t.categoria}</span></td>
+            <td class="text-gr fs-12">${t.cliente||'—'}</td>
+            <td class="${t.tipo==='receita'?'text-ok':'text-er'} fw-7">${t.tipo==='receita'?'+':'-'} R$ ${t.valor.toLocaleString('pt-BR')}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// EQUIPE
+// ============================================================
+function renderEquipe() {
+  const cores = ['var(--al)','var(--bl)','var(--pu)','var(--ok)','var(--wr)','var(--er)'];
+  return `
+  <div class="team-grid">
+    ${D.equipe.map((m,i)=>`<div class="team-card">
+      <div class="team-ava" style="color:${cores[i%cores.length]}">${initials(m.nome)}</div>
+      <div class="team-name">${m.nome}</div>
+      <div class="team-role">${m.cargo}</div>
+      <div class="team-tags">${m.espec.map(e=>`<span class="badge badge-gr">${e}</span>`).join('')}</div>
+      <span class="badge ${nivelBadge(m.nivel)}" style="margin-bottom:8px">${m.nivel}</span>
+      <div class="team-stat">${m.projetos} projetos ativos</div>
+      <div class="team-stat text-al" style="margin-top:2px">${m.email}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ============================================================
+// PIPELINE
+// ============================================================
+function renderPipeline() {
+  const etapas = ['Prospecção','Qualificação','Proposta','Negociação','Fechado'];
+  const etapaColors = {Prospecção:'var(--gr3)',Qualificação:'var(--bl)',Proposta:'var(--pu)',Negociação:'var(--wr)',Fechado:'var(--ok)'};
+  return `
+  <div class="kpi-grid mb-4">
+    ${etapas.map(e=>{
+      const leads = D.pipeline.filter(p=>p.etapa===e);
+      const valor = leads.reduce((a,b)=>a+b.valor,0);
+      return `<div class="kpi"><div class="kpi-label">${e}</div><div class="kpi-val">${leads.length}</div><div class="kpi-sub">R$ ${valor.toLocaleString('pt-BR')}</div></div>`;
+    }).join('')}
+  </div>
+  <div class="k-board">
+    ${etapas.map(etapa=>{
+      const cards = D.pipeline.filter(p=>p.etapa===etapa);
+      return `<div class="k-col">
+        <div class="k-col-hd">
+          <span style="color:${etapaColors[etapa]}">${etapa}</span>
+          <div class="k-col-cnt">${cards.length}</div>
+        </div>
+        <div class="k-cards">
+          ${cards.map(p=>`<div class="k-card">
+            <div class="k-card-title">${p.empresa}</div>
+            <div class="k-card-sub">${p.contato}</div>
+            <div class="k-card-ft">
+              <span class="text-al fw-7" style="font-size:13px">R$ ${p.valor.toLocaleString('pt-BR')}</span>
+              <span class="badge badge-gr">${p.probabilidade}%</span>
+            </div>
+            <div class="fs-11 text-gr" style="margin-top:6px">Últ. contato: ${fmtDate(p.dataUlt)}</div>
+          </div>`).join('')}
+          ${cards.length===0?'<div class="empty" style="padding:20px">Vazio</div>':''}
+        </div>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ============================================================
+// CALENDÁRIO
+// ============================================================
+function renderCalendario() {
+  const dias = [...new Set(D.calendario.map(p=>p.data))].sort();
+  const canalColor = {Instagram:'var(--pu)',LinkedIn:'var(--bl)',TikTok:'var(--er)',Blog:'var(--wr)',Email:'var(--al)'};
+  const statusCal = {Agendado:'badge-ok',Rascunho:'badge-gr',Revisão:'badge-wr'};
+  return `
+  <div class="grid-2">
+    <div>
+      ${dias.map(dia=>`
+      <div class="cal-day mb-4">
+        <div class="cal-day-label">${fmtDateFull(dia)}</div>
+        <div class="cal-posts">
+          ${D.calendario.filter(p=>p.data===dia).map(p=>`<div class="cal-post">
+            <div class="cal-post-dot" style="background:${canalColor[p.canal]||'var(--gr3)'}"></div>
+            <div class="cal-post-info">
+              <div class="cal-post-title">${p.titulo}</div>
+              <div class="cal-post-meta">${p.hora} · ${p.cliente}</div>
+            </div>
+            <span class="badge ${statusCal[p.status]||'badge-gr'}">${p.status}</span>
+            <span class="badge" style="background:rgba(0,0,0,.2);color:${canalColor[p.canal]||'var(--gr3)'};border:1px solid ${canalColor[p.canal]||'var(--gr3)'}33">${p.canal}</span>
+          </div>`).join('')}
+        </div>
+      </div>`).join('')}
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-hd"><h3>Resumo por Canal</h3></div>
+        <div class="prog-wrap">
+          ${Object.keys(canalColor).map(c=>{
+            const cnt = D.calendario.filter(p=>p.canal===c).length;
+            const pct = Math.round(cnt/D.calendario.length*100);
+            return `<div class="prog-item">
+              <div class="prog-top"><span>${c}</span><span class="text-wh fw-6">${cnt} posts</span></div>
+              <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${canalColor[c]}"></div></div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="card mt-3">
+        <div class="card-hd"><h3>Status dos Posts</h3></div>
+        <div class="flex gap-3" style="flex-direction:column">
+          ${[['Agendado','ok'],['Revisão','wr'],['Rascunho','gr']].map(([s,c])=>`
+          <div class="flex items-center gap-2" style="justify-content:space-between">
+            <span class="badge badge-${c}">${s}</span>
+            <span class="fw-7 text-wh">${D.calendario.filter(p=>p.status===s).length}</span>
+          </div>`).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// RELATÓRIOS
+// ============================================================
+function renderRelatorios() {
+  const statusRel = {Enviado:'badge-ok',Pendente:'badge-wr','Em Preparo':'badge-bl'};
+  return `
+  <div class="grid-2 mb-4">
+    <div class="card">
+      <div class="card-hd"><h3>Métricas por Canal — Abril 2026</h3></div>
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Canal</th><th>Alcance</th><th>Engajamento</th><th>Conversões</th></tr></thead>
+          <tbody>
+            <tr><td>Instagram</td><td>180.000</td><td>5.4%</td><td>312</td></tr>
+            <tr><td>Google ADS</td><td>95.400</td><td>4.8%</td><td>287</td></tr>
+            <tr><td>LinkedIn</td><td>28.700</td><td>2.1%</td><td>58</td></tr>
+            <tr><td>TikTok</td><td>62.000</td><td>8.2%</td><td>198</td></tr>
+            <tr><td>Email</td><td>42.500</td><td>28.4%</td><td>124</td></tr>
+            <tr><td>SEO / Blog</td><td>38.200</td><td>—</td><td>67</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h3>Performance Geral</h3></div>
+      <div class="prog-wrap">
+        <div class="prog-item"><div class="prog-top"><span>Taxa de Retenção de Clientes</span><span class="text-ok fw-6">94%</span></div><div class="prog-bar"><div class="prog-fill ok" style="width:94%"></div></div></div>
+        <div class="prog-item"><div class="prog-top"><span>NPS Médio</span><span class="text-al fw-6">72/100</span></div><div class="prog-bar"><div class="prog-fill" style="width:72%"></div></div></div>
+        <div class="prog-item"><div class="prog-top"><span>Relatórios Enviados no Prazo</span><span class="text-ok fw-6">83%</span></div><div class="prog-bar"><div class="prog-fill ok" style="width:83%"></div></div></div>
+        <div class="prog-item"><div class="prog-top"><span>Satisfação Clientes</span><span class="text-al fw-6">4.7/5</span></div><div class="prog-bar"><div class="prog-fill" style="width:94%"></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h3>Relatórios Enviados</h3></div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Cliente</th><th>Período</th><th>Alcance</th><th>Engajamento</th><th>Leads</th><th>Enviado em</th><th>Status</th></tr></thead>
+        <tbody>
+          ${D.relatorios.map(r=>`<tr>
+            <td class="text-wh fw-6">${r.cliente}</td>
+            <td>${r.periodo}</td>
+            <td>${r.alcance.toLocaleString('pt-BR')}</td>
+            <td>${r.engajamento}</td>
+            <td class="text-al fw-6">${r.leads||'—'}</td>
+            <td class="fs-12 text-gr">${r.enviado?fmtDate(r.enviado):'—'}</td>
+            <td><span class="badge ${statusRel[r.status]||'badge-gr'}">${r.status}</span></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// PROPOSTAS
+// ============================================================
+function renderPropostas() {
+  const statusCol = {Enviada:'badge-bl','Em Negociação':'badge-wr',Aprovada:'badge-ok',Rascunho:'badge-gr',Recusada:'badge-er'};
+  return `
+  <div class="kpi-grid mb-4">
+    <div class="kpi kpi-al"><div class="kpi-label">Total Propostas</div><div class="kpi-val">${D.propostas.length}</div><div class="kpi-sub">Este mês</div></div>
+    <div class="kpi kpi-ok"><div class="kpi-label">Aprovadas</div><div class="kpi-val">${D.propostas.filter(p=>p.status==='Aprovada').length}</div><div class="kpi-sub">Taxa: ${Math.round(D.propostas.filter(p=>p.status==='Aprovada').length/D.propostas.length*100)}%</div></div>
+    <div class="kpi kpi-bl"><div class="kpi-label">Valor Total</div><div class="kpi-val">R$ ${D.propostas.reduce((a,b)=>a+b.valor,0).toLocaleString('pt-BR')}</div><div class="kpi-sub">Todas as propostas</div></div>
+    <div class="kpi kpi-pu"><div class="kpi-label">Ticket Médio</div><div class="kpi-val">R$ ${Math.round(D.propostas.reduce((a,b)=>a+b.valor,0)/D.propostas.length).toLocaleString('pt-BR')}</div><div class="kpi-sub">Por proposta</div></div>
+  </div>
+  <div class="prop-grid">
+    ${D.propostas.map(p=>`<div class="prop-card">
+      <div class="prop-hd">
+        <div>
+          <div class="prop-client">${p.cliente}</div>
+          <div class="prop-date">Enviada: ${fmtDate(p.data)} · Válida até: ${fmtDate(p.validade)}</div>
+        </div>
+        <span class="badge ${statusCol[p.status]||'badge-gr'}">${p.status}</span>
+      </div>
+      <div class="prop-val">R$ ${p.valor.toLocaleString('pt-BR')}${p.desconto>0?` <span style="font-size:13px;color:var(--gr3);text-decoration:line-through">+${p.desconto}% desc.</span>`:''}</div>
+      <div class="prop-tags">${p.servicos.map(s=>`<span class="badge badge-gr">${s}</span>`).join('')}</div>
+      <div class="prop-ft">
+        <button class="btn btn-ghost btn-sm">Ver Proposta</button>
+        ${p.status==='Rascunho'?`<button class="btn btn-al btn-sm">Enviar</button>`:''}
+        ${p.status==='Em Negociação'?`<button class="btn btn-al btn-sm">Aprovar</button>`:''}
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+const modalForms = {
+  clientes: {
+    title: 'Novo Cliente',
+    fields: `
+      <div class="form-row"><label class="form-label">Nome da Empresa</label><input class="inp" id="f-nome" placeholder="Ex: TechVision Ltda"></div>
+      <div class="form-row"><label class="form-label">Email de Contato</label><input class="inp" id="f-contato" type="email" placeholder="contato@empresa.com.br"></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Setor</label><select class="inp" id="f-setor"><option>Tecnologia</option><option>Moda</option><option>Alimentação</option><option>Saúde</option><option>Educação</option><option>Jurídico</option><option>Construção</option><option>Outros</option></select></div>
+        <div class="form-row"><label class="form-label">Mensalidade (R$)</label><input class="inp" id="f-mensalidade" type="number" placeholder="0,00"></div>
+      </div>
+      <div class="form-row"><label class="form-label">Status</label><select class="inp" id="f-status"><option>Ativo</option><option>Pausado</option><option>Inativo</option></select></div>
+      <div class="form-row"><label class="form-label">Serviços (separados por vírgula)</label><input class="inp" id="f-servicos" placeholder="SEO, Social Media, ADS"></div>`,
+    save: () => {
+      const nome = document.getElementById('f-nome').value.trim();
+      if(!nome) return alert('Informe o nome do cliente');
+      D.clientes.push({
+        id: ++nextId, nome,
+        contato: document.getElementById('f-contato').value.trim(),
+        setor: document.getElementById('f-setor').value,
+        mensalidade: parseFloat(document.getElementById('f-mensalidade').value)||0,
+        status: document.getElementById('f-status').value,
+        servicos: document.getElementById('f-servicos').value.split(',').map(s=>s.trim()).filter(Boolean),
+      });
+    }
+  },
+  projetos: {
+    title: 'Novo Projeto',
+    fields: `
+      <div class="form-row"><label class="form-label">Nome do Projeto</label><input class="inp" id="f-nome" placeholder="Ex: Rebranding Empresa X"></div>
+      <div class="form-row"><label class="form-label">Cliente</label><select class="inp" id="f-cliente">${D.clientes.map(c=>`<option>${c.nome}</option>`).join('')}</select></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Status</label><select class="inp" id="f-status"><option>Planejamento</option><option>Em Andamento</option><option>Revisão</option><option>Concluído</option></select></div>
+        <div class="form-row"><label class="form-label">Prioridade</label><select class="inp" id="f-prioridade"><option>Alta</option><option>Média</option><option>Normal</option><option>Baixa</option></select></div>
+      </div>
+      <div class="form-row"><label class="form-label">Prazo</label><input class="inp" id="f-prazo" type="date"></div>`,
+    save: () => {
+      const nome = document.getElementById('f-nome').value.trim();
+      if(!nome) return alert('Informe o nome do projeto');
+      D.projetos.push({
+        id: ++nextId, nome,
+        cliente: document.getElementById('f-cliente').value,
+        status: document.getElementById('f-status').value,
+        prioridade: document.getElementById('f-prioridade').value,
+        prazo: document.getElementById('f-prazo').value || '2026-12-31',
+        progresso: 0,
+      });
+    }
+  },
+  campanhas: {
+    title: 'Nova Campanha',
+    fields: `
+      <div class="form-row"><label class="form-label">Nome da Campanha</label><input class="inp" id="f-nome" placeholder="Ex: Google ADS Verão 2026"></div>
+      <div class="form-row"><label class="form-label">Cliente</label><select class="inp" id="f-cliente">${D.clientes.map(c=>`<option>${c.nome}</option>`).join('')}</select></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Canal</label><select class="inp" id="f-canal"><option>Google ADS</option><option>Meta ADS</option><option>LinkedIn ADS</option><option>TikTok ADS</option><option>Email</option><option>SEO</option></select></div>
+        <div class="form-row"><label class="form-label">Orçamento (R$)</label><input class="inp" id="f-orcamento" type="number" placeholder="0"></div>
+      </div>
+      <div class="form-row"><label class="form-label">Status</label><select class="inp" id="f-status"><option>Ativa</option><option>Pausada</option><option>Encerrada</option></select></div>`,
+    save: () => {
+      const nome = document.getElementById('f-nome').value.trim();
+      if(!nome) return alert('Informe o nome da campanha');
+      D.campanhas.push({
+        id: ++nextId, nome,
+        cliente: document.getElementById('f-cliente').value,
+        canal: document.getElementById('f-canal').value,
+        orcamento: parseFloat(document.getElementById('f-orcamento').value)||0,
+        gasto: 0, ctr: null, cpa: null,
+        status: document.getElementById('f-status').value,
+        leads: 0,
+      });
+    }
+  },
+  financeiro: {
+    title: 'Nova Transação',
+    fields: `
+      <div class="form-row"><label class="form-label">Tipo</label><select class="inp" id="f-tipo"><option>receita</option><option>despesa</option></select></div>
+      <div class="form-row"><label class="form-label">Descrição</label><input class="inp" id="f-desc" placeholder="Ex: Mensalidade Cliente X"></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Valor (R$)</label><input class="inp" id="f-valor" type="number" placeholder="0,00"></div>
+        <div class="form-row"><label class="form-label">Data</label><input class="inp" id="f-data" type="date"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Categoria</label><select class="inp" id="f-cat"><option>Mensalidade</option><option>Projeto</option><option>Consultoria</option><option>Software</option><option>Pessoal</option><option>Infraestrutura</option><option>Outros</option></select></div>
+        <div class="form-row"><label class="form-label">Cliente (opcional)</label><select class="inp" id="f-cliente"><option value="">—</option>${D.clientes.map(c=>`<option>${c.nome}</option>`).join('')}</select></div>
+      </div>`,
+    save: () => {
+      const desc = document.getElementById('f-desc').value.trim();
+      if(!desc) return alert('Informe a descrição');
+      D.financeiro.push({
+        id: ++nextId,
+        tipo: document.getElementById('f-tipo').value,
+        descricao: desc,
+        valor: parseFloat(document.getElementById('f-valor').value)||0,
+        data: document.getElementById('f-data').value||'2026-05-13',
+        categoria: document.getElementById('f-cat').value,
+        cliente: document.getElementById('f-cliente').value,
+      });
+    }
+  },
+  equipe: {
+    title: 'Novo Membro',
+    fields: `
+      <div class="form-row"><label class="form-label">Nome Completo</label><input class="inp" id="f-nome" placeholder="Ex: João Silva"></div>
+      <div class="form-row"><label class="form-label">Cargo</label><input class="inp" id="f-cargo" placeholder="Ex: Designer Gráfico"></div>
+      <div class="form-row"><label class="form-label">Email</label><input class="inp" id="f-email" type="email" placeholder="joao@alcance.com.br"></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Nível</label><select class="inp" id="f-nivel"><option>Júnior</option><option>Pleno</option><option>Sênior</option></select></div>
+        <div class="form-row"><label class="form-label">Projetos Ativos</label><input class="inp" id="f-projetos" type="number" value="0" min="0"></div>
+      </div>
+      <div class="form-row"><label class="form-label">Especializações (separadas por vírgula)</label><input class="inp" id="f-espec" placeholder="SEO, Analytics, Copywriting"></div>`,
+    save: () => {
+      const nome = document.getElementById('f-nome').value.trim();
+      if(!nome) return alert('Informe o nome do membro');
+      D.equipe.push({
+        id: ++nextId, nome,
+        cargo: document.getElementById('f-cargo').value,
+        email: document.getElementById('f-email').value,
+        nivel: document.getElementById('f-nivel').value,
+        projetos: parseInt(document.getElementById('f-projetos').value)||0,
+        espec: document.getElementById('f-espec').value.split(',').map(s=>s.trim()).filter(Boolean),
+      });
+    }
+  },
+  pipeline: {
+    title: 'Novo Lead',
+    fields: `
+      <div class="form-row"><label class="form-label">Empresa</label><input class="inp" id="f-empresa" placeholder="Ex: Empresa X Ltda"></div>
+      <div class="form-row"><label class="form-label">Contato</label><input class="inp" id="f-contato" placeholder="Ex: João, Diretora Ana"></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Valor Estimado (R$)</label><input class="inp" id="f-valor" type="number" placeholder="0"></div>
+        <div class="form-row"><label class="form-label">Etapa</label><select class="inp" id="f-etapa"><option>Prospecção</option><option>Qualificação</option><option>Proposta</option><option>Negociação</option><option>Fechado</option></select></div>
+      </div>
+      <div class="form-row"><label class="form-label">Probabilidade de Fechamento (%)</label><input class="inp" id="f-prob" type="number" min="0" max="100" value="20"></div>`,
+    save: () => {
+      const empresa = document.getElementById('f-empresa').value.trim();
+      if(!empresa) return alert('Informe a empresa');
+      D.pipeline.push({
+        id: ++nextId, empresa,
+        contato: document.getElementById('f-contato').value,
+        valor: parseFloat(document.getElementById('f-valor').value)||0,
+        etapa: document.getElementById('f-etapa').value,
+        probabilidade: parseInt(document.getElementById('f-prob').value)||20,
+        dataUlt: new Date().toISOString().split('T')[0],
+      });
+    }
+  },
+  calendario: {
+    title: 'Novo Post',
+    fields: `
+      <div class="form-row"><label class="form-label">Título do Post</label><input class="inp" id="f-titulo" placeholder="Ex: Promoção de Verão"></div>
+      <div class="form-row"><label class="form-label">Cliente</label><select class="inp" id="f-cliente">${D.clientes.map(c=>`<option>${c.nome}</option>`).join('')}</select></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Canal</label><select class="inp" id="f-canal"><option>Instagram</option><option>LinkedIn</option><option>TikTok</option><option>Blog</option><option>Email</option></select></div>
+        <div class="form-row"><label class="form-label">Status</label><select class="inp" id="f-status"><option>Rascunho</option><option>Revisão</option><option>Agendado</option></select></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Data</label><input class="inp" id="f-data" type="date"></div>
+        <div class="form-row"><label class="form-label">Hora</label><input class="inp" id="f-hora" type="time" value="09:00"></div>
+      </div>`,
+    save: () => {
+      const titulo = document.getElementById('f-titulo').value.trim();
+      if(!titulo) return alert('Informe o título do post');
+      D.calendario.push({
+        id: ++nextId, titulo,
+        cliente: document.getElementById('f-cliente').value,
+        canal: document.getElementById('f-canal').value,
+        status: document.getElementById('f-status').value,
+        data: document.getElementById('f-data').value||'2026-05-16',
+        hora: document.getElementById('f-hora').value||'09:00',
+      });
+    }
+  },
+  relatorios: {
+    title: 'Novo Relatório',
+    fields: `
+      <div class="form-row"><label class="form-label">Cliente</label><select class="inp" id="f-cliente">${D.clientes.map(c=>`<option>${c.nome}</option>`).join('')}</select></div>
+      <div class="form-row"><label class="form-label">Período</label><input class="inp" id="f-periodo" placeholder="Ex: Maio/2026"></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Alcance</label><input class="inp" id="f-alcance" type="number" placeholder="0"></div>
+        <div class="form-row"><label class="form-label">Leads</label><input class="inp" id="f-leads" type="number" placeholder="0"></div>
+      </div>
+      <div class="form-row"><label class="form-label">Status</label><select class="inp" id="f-status"><option>Em Preparo</option><option>Pendente</option><option>Enviado</option></select></div>`,
+    save: () => {
+      D.relatorios.push({
+        id: ++nextId,
+        cliente: document.getElementById('f-cliente').value,
+        periodo: document.getElementById('f-periodo').value||'Maio/2026',
+        alcance: parseInt(document.getElementById('f-alcance').value)||0,
+        engajamento: '—',
+        conversoes: 0,
+        leads: parseInt(document.getElementById('f-leads').value)||0,
+        enviado: null,
+        status: document.getElementById('f-status').value,
+      });
+    }
+  },
+  propostas: {
+    title: 'Nova Proposta',
+    fields: `
+      <div class="form-row"><label class="form-label">Cliente</label><input class="inp" id="f-cliente" placeholder="Ex: Empresa Nova"></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Valor (R$)</label><input class="inp" id="f-valor" type="number" placeholder="0"></div>
+        <div class="form-row"><label class="form-label">Desconto (%)</label><input class="inp" id="f-desconto" type="number" value="0" min="0" max="100"></div>
+      </div>
+      <div class="form-row"><label class="form-label">Serviços (separados por vírgula)</label><input class="inp" id="f-servicos" placeholder="Social Media, ADS, SEO"></div>
+      <div class="form-grid">
+        <div class="form-row"><label class="form-label">Data</label><input class="inp" id="f-data" type="date"></div>
+        <div class="form-row"><label class="form-label">Validade</label><input class="inp" id="f-validade" type="date"></div>
+      </div>
+      <div class="form-row"><label class="form-label">Status</label><select class="inp" id="f-status"><option>Rascunho</option><option>Enviada</option><option>Em Negociação</option><option>Aprovada</option></select></div>`,
+    save: () => {
+      const cliente = document.getElementById('f-cliente').value.trim();
+      if(!cliente) return alert('Informe o cliente');
+      D.propostas.push({
+        id: ++nextId, cliente,
+        valor: parseFloat(document.getElementById('f-valor').value)||0,
+        desconto: parseInt(document.getElementById('f-desconto').value)||0,
+        servicos: document.getElementById('f-servicos').value.split(',').map(s=>s.trim()).filter(Boolean),
+        data: document.getElementById('f-data').value||'2026-05-13',
+        validade: document.getElementById('f-validade').value||'2026-05-27',
+        status: document.getElementById('f-status').value,
+      });
+    }
+  },
+};
+
+function openModal(page) {
+  const cfg = modalForms[page];
+  if(!cfg) return;
+  currentModal = page;
+  document.getElementById('modal-title').textContent = cfg.title;
+  document.getElementById('modal-body').innerHTML = cfg.fields;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  currentModal = null;
+}
+
+function closeModalOnOverlay(e) {
+  if(e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+function saveModal() {
+  if(!currentModal) return;
+  const cfg = modalForms[currentModal];
+  if(cfg && cfg.save) {
+    try { cfg.save(); } catch(e) { console.error(e); return; }
+    closeModal();
+    render();
+  }
+}
+
+// Edit cliente modal
+function editCliente(id) {
+  const c = D.clientes.find(x=>x.id===id);
+  if(!c) return;
+  document.getElementById('modal-title').textContent = 'Editar Cliente';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-row"><label class="form-label">Nome da Empresa</label><input class="inp" id="f-nome" value="${c.nome}"></div>
+    <div class="form-row"><label class="form-label">Email de Contato</label><input class="inp" id="f-contato" type="email" value="${c.contato}"></div>
+    <div class="form-grid">
+      <div class="form-row"><label class="form-label">Setor</label><input class="inp" id="f-setor" value="${c.setor}"></div>
+      <div class="form-row"><label class="form-label">Mensalidade (R$)</label><input class="inp" id="f-mensalidade" type="number" value="${c.mensalidade}"></div>
+    </div>
+    <div class="form-row"><label class="form-label">Status</label><select class="inp" id="f-status">
+      <option ${c.status==='Ativo'?'selected':''}>Ativo</option>
+      <option ${c.status==='Pausado'?'selected':''}>Pausado</option>
+      <option ${c.status==='Inativo'?'selected':''}>Inativo</option>
+    </select></div>
+    <div class="form-row"><label class="form-label">Serviços</label><input class="inp" id="f-servicos" value="${c.servicos.join(', ')}"></div>`;
+  currentModal = null;
+  document.getElementById('modal-save').onclick = () => {
+    c.nome = document.getElementById('f-nome').value.trim()||c.nome;
+    c.contato = document.getElementById('f-contato').value.trim();
+    c.setor = document.getElementById('f-setor').value;
+    c.mensalidade = parseFloat(document.getElementById('f-mensalidade').value)||c.mensalidade;
+    c.status = document.getElementById('f-status').value;
+    c.servicos = document.getElementById('f-servicos').value.split(',').map(s=>s.trim()).filter(Boolean);
+    closeModal();
+    render();
+  };
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function bindEvents() {
+  // Re-attach modal save for regular modals
+  if(currentModal) {
+    document.getElementById('modal-save').onclick = saveModal;
+  }
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function statusBadge(s) {
+  const m = {Ativo:'badge-ok',Pausado:'badge-wr',Inativo:'badge-er'};
+  return `<span class="badge ${m[s]||'badge-gr'}">${s}</span>`;
+}
+function statusProj(s) {
+  const m = {Planejamento:'badge-gr','Em Andamento':'badge-bl',Revisão:'badge-wr',Concluído:'badge-ok'};
+  return `<span class="badge ${m[s]||'badge-gr'}">${s}</span>`;
+}
+function statusCamp(s) {
+  const m = {Ativa:'badge-ok',Pausada:'badge-wr',Encerrada:'badge-er'};
+  return `<span class="badge ${m[s]||'badge-gr'}">${s}</span>`;
+}
+function canalBadge(c) {
+  const m = {'Google ADS':'badge-bl','Meta ADS':'badge-pu','LinkedIn ADS':'badge-al','TikTok ADS':'badge-er',Email:'badge-ok',SEO:'badge-wr'};
+  return `<span class="badge ${m[c]||'badge-gr'}">${c}</span>`;
+}
+function prioridadeBadge(p) {
+  const m = {Alta:'badge-er',Média:'badge-wr',Normal:'badge-al',Baixa:'badge-gr'};
+  return `<span class="badge ${m[p]||'badge-gr'}">${p}</span>`;
+}
+function nivelBadge(n) {
+  const m = {Sênior:'badge-al',Pleno:'badge-bl',Júnior:'badge-gr'};
+  return m[n]||'badge-gr';
+}
+function initials(name) {
+  return name.split(' ').slice(0,2).map(n=>n[0]).join('').toUpperCase();
+}
+function fmtDate(d) {
+  if(!d) return '—';
+  const [y,m,day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+function fmtDateFull(d) {
+  const days = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const dt = new Date(d+'T12:00:00');
+  return `${days[dt.getDay()]}, ${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear()}`;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('modal-save').onclick = saveModal;
+  render();
+});
+</script>
+</body>
+</html>
