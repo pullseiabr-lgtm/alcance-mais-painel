@@ -4,7 +4,7 @@ import * as MetaAds from '@/lib/meta-ads'
 import * as GoogleAds from '@/lib/google-ads'
 import * as TikTokAds from '@/lib/tiktok-ads'
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+// client criado por request para garantir leitura correta das env vars
 
 const SYSTEM_PROMPT = `Você é o Agente IA da Alcance+ Agência de Marketing Digital — um Diretor Estratégico Digital completo e gestor de tráfego sênior.
 
@@ -547,6 +547,10 @@ async function executeTool(name: string, input: ToolInput): Promise<string> {
 
 export async function POST(req: NextRequest) {
   try {
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (!apiKey) return NextResponse.json({ error: 'ANTHROPIC_API_KEY não configurada' }, { status: 503 })
+    const client = new Anthropic({ apiKey })
+
     const { messages } = await req.json()
 
     if (!messages || !Array.isArray(messages)) {

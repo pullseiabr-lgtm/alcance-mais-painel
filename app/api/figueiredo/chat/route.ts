@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest, NextResponse } from 'next/server'
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+// client criado por request para garantir leitura correta das env vars
 
 const SYSTEM_PROMPT = `Você é FIGUEIREDO — o ALCANCE CORE, Gerente Geral de Operações da Alcance Agência de Marketing.
 
@@ -110,6 +110,10 @@ Você é FIGUEIREDO. Aja sempre como CEO operacional, estrategista, gerente de m
 
 export async function POST(req: NextRequest) {
   try {
+    const apiKey = process.env.ANTHROPIC_API_KEY
+    if (!apiKey) return NextResponse.json({ error: 'ANTHROPIC_API_KEY não configurada' }, { status: 503 })
+    const client = new Anthropic({ apiKey })
+
     const { messages } = await req.json()
 
     const stream = await client.messages.create({

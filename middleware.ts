@@ -5,8 +5,9 @@ export async function middleware(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  // Skip auth check if Supabase is not yet configured
-  if (!supabaseUrl || !supabaseKey || supabaseUrl.startsWith('COLE_') || !supabaseUrl.startsWith('http')) {
+  // Skip auth check if Supabase is not yet configured OR in dev bypass mode
+  const devBypass = process.env.NEXT_PUBLIC_DEV_BYPASS === 'true'
+  if (!supabaseUrl || !supabaseKey || supabaseUrl.startsWith('COLE_') || !supabaseUrl.startsWith('http') || devBypass) {
     return NextResponse.next({ request })
   }
 

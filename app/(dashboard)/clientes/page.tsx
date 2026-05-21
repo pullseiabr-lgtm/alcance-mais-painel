@@ -3,6 +3,12 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { clientesIniciais, clienteVazio, type ClienteCompleto } from '@/lib/types/cliente'
 
+function waLink(phone: string) {
+  const digits = phone.replace(/\D/g, '')
+  const num = digits.startsWith('55') ? digits : `55${digits}`
+  return `https://wa.me/${num}`
+}
+
 const statusColor: Record<string, string> = {
   Ativo: 'badge-ok', Onboarding: 'badge-al', Pausado: 'badge-wr', Inativo: 'badge-er',
 }
@@ -143,7 +149,19 @@ export default function ClientesPage() {
                   </td>
                   <td>
                     <div style={{ fontSize: 11 }}>{c.responsavel}</div>
-                    <div style={{ fontSize: 9.5, color: 'var(--gr3)' }}>{c.whatsapp || c.telefone}</div>
+                    {(c.whatsapp || c.telefone) ? (
+                      <a
+                        href={waLink(c.whatsapp || c.telefone)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ fontSize: 9.5, color: '#25D366', textDecoration: 'none' }}
+                        title="Abrir no WhatsApp"
+                      >
+                        {c.whatsapp || c.telefone}
+                      </a>
+                    ) : (
+                      <div style={{ fontSize: 9.5, color: 'var(--gr3)' }}>—</div>
+                    )}
                   </td>
                   <td><span className="badge badge-gr">{c.segmento}</span></td>
                   <td>
@@ -165,6 +183,18 @@ export default function ClientesPage() {
                   <td>
                     <div style={{ display: 'flex', gap: 4 }}>
                       <Link href={`/clientes/${c.id}`} className="btn btn-ghost btn-sm">Perfil</Link>
+                      {(c.whatsapp || c.telefone) && (
+                        <a
+                          href={waLink(c.whatsapp || c.telefone)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-ghost btn-sm"
+                          style={{ background: '#25D36618', borderColor: '#25D36644', color: '#25D366', textDecoration: 'none' }}
+                          title="WhatsApp"
+                        >
+                          WPP
+                        </a>
+                      )}
                       <button className="btn btn-ghost btn-sm" onClick={() => openEdit(c)}>Editar</button>
                       <button className="btn btn-danger btn-sm" onClick={() => remove(c.id)}>✕</button>
                     </div>

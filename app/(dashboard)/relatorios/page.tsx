@@ -1,5 +1,16 @@
 'use client'
 import { useState } from 'react'
+import { clientesIniciais } from '@/lib/types/cliente'
+
+function waRelatorio(clienteNome: string, periodo: string): string {
+  const cliente = clientesIniciais.find(c => c.nome === clienteNome || c.nomeFantasia === clienteNome)
+  const phone = cliente?.whatsapp || cliente?.telefone
+  if (!phone) return ''
+  const digits = phone.replace(/\D/g, '')
+  const num = digits.startsWith('55') ? digits : `55${digits}`
+  const texto = `Olá! Segue o relatório de performance ${periodo} da Alcance+. Qualquer dúvida, estou à disposição!`
+  return `https://wa.me/${num}?text=${encodeURIComponent(texto)}`
+}
 
 const clientes = ['Todos','TechNova Solutions','Construtora Viva Mais','Dr. Marcos Cardiologia','Sabor & Arte Restaurante','Imobiliária Prime','Clínica OdontoVida']
 const periodos = ['Maio 2026','Abril 2026','Março 2026','Fevereiro 2026','Último Trimestre','Últimos 6 meses']
@@ -110,6 +121,21 @@ export default function RelatoriosPage() {
                       <div style={{ display: 'flex', gap: 4 }}>
                         <button className="btn btn-ghost btn-sm">Ver</button>
                         {r.status !== 'Enviado' && <button className="btn btn-al btn-sm">Enviar</button>}
+                        {(() => {
+                          const link = waRelatorio(r.cliente, r.periodo)
+                          return link ? (
+                            <a
+                              href={link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-ghost btn-sm"
+                              style={{ background: '#25D36618', borderColor: '#25D36644', color: '#25D366', textDecoration: 'none' }}
+                              title="Enviar por WhatsApp"
+                            >
+                              WPP
+                            </a>
+                          ) : null
+                        })()}
                       </div>
                     </td>
                   </tr>
