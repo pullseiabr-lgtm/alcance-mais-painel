@@ -13,19 +13,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request })
   }
 
-  // Verificar sessão própria (cookie)
+  // Verificar cookie de sessão
   const sessionCookie = request.cookies.get('alcance_session')?.value
-  const session = sessionCookie ? verificarToken(sessionCookie) : null
+  const session = sessionCookie ? await verificarToken(sessionCookie) : null
 
   if (session) {
-    // Logado — redirecionar /login → /
     if (pathname.startsWith('/login')) {
       return NextResponse.redirect(new URL('/', request.url))
     }
     return NextResponse.next({ request })
   }
 
-  // Sem sessão — redirecionar para login (exceto a própria página de login e APIs)
+  // Sem sessão válida — redirecionar para login
   if (!pathname.startsWith('/login') && !pathname.startsWith('/api/auth')) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
