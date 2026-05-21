@@ -19,6 +19,11 @@ build/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+dev.log
+dev2.log
+
+# Dados locais de dev (substituídos pelo Supabase em produção)
+.usuarios-dev.json
 
 # Editor
 .DS_Store

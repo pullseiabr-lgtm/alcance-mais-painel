@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 
 export default function LoginPage() {
@@ -10,22 +9,33 @@ export default function LoginPage() {
   const [erro, setErro] = useState('')
   const router = useRouter()
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const devBypass = process.env.NEXT_PUBLIC_DEV_BYPASS === 'true'
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseOk = supabaseUrl && supabaseKey && supabaseUrl.startsWith('https') && supabaseKey.length > 50
 
   async function login(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setErro('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
-    if (error) {
-      setErro('E-mail ou senha inválidos.')
+    try {
+      const { createBrowserClient } = await import('@supabase/ssr')
+      const supabase = createBrowserClient(supabaseUrl!, supabaseKey!)
+      const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
+      if (error) {
+        setErro('E-mail ou senha inválidos.')
+        setLoading(false)
+      } else {
+        router.push('/')
+      }
+    } catch {
+      setErro('Erro de conexão com o servidor de autenticação.')
       setLoading(false)
-    } else {
-      router.push('/')
     }
+  }
+
+  function entrarDireto() {
+    router.push('/')
   }
 
   return (
@@ -43,6 +53,29 @@ export default function LoginPage() {
           <div style={{ fontSize: 11, color: 'var(--gr3)', marginTop: 4 }}>Sistema de Gestão da Agência</div>
         </div>
 
+        {/* Botão bypass quando Supabase não está configurado */}
+        {(devBypass || !supabaseOk) && (
+          <div style={{ marginBottom: 16 }}>
+            <button
+              onClick={entrarDireto}
+              className="btn btn-al"
+              style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: 14 }}
+            >
+              🚀 Entrar no Sistema
+            </button>
+            {!supabaseOk && (
+              <div style={{ marginTop: 8, fontSize: 10, color: 'var(--gr3)', textAlign: 'center' }}>
+                Modo desenvolvimento — Supabase não configurado
+              </div>
+            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '16px 0' }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--bk5)' }} />
+              <span style={{ fontSize: 10, color: 'var(--gr3)' }}>ou entre com e-mail</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--bk5)' }} />
+            </div>
+          </div>
+        )}
+
         <form onSubmit={login} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className="field">
             <label>E-mail</label>
@@ -53,9 +86,14 @@ export default function LoginPage() {
             <input className="inp" type="password" value={senha} onChange={e => setSenha(e.target.value)} placeholder="••••••••" required />
           </div>
           {erro && <div style={{ fontSize: 11, color: 'var(--er)', padding: '8px 12px', background: 'rgba(239,68,68,.1)', borderRadius: 'var(--r)', border: '1px solid rgba(239,68,68,.2)' }}>{erro}</div>}
-          <button type="submit" className="btn btn-al" style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: 13, marginTop: 4 }} disabled={loading}>
-            {loading ? 'Entrando...' : 'Entrar'}
+          <button type="submit" className="btn btn-al" style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: 13, marginTop: 4 }} disabled={loading || !supabaseOk}>
+            {loading ? 'Entrando...' : 'Entrar com E-mail'}
           </button>
+          {!supabaseOk && (
+            <div style={{ fontSize: 10, color: 'var(--gr3)', textAlign: 'center' }}>
+              Configure o Supabase no .env.local para usar autenticação
+            </div>
+          )}
         </form>
 
         <div style={{ textAlign: 'center', marginTop: 20, fontSize: 10, color: 'var(--gr3)' }}>

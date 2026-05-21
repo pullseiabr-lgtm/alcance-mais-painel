@@ -8,6 +8,10 @@ export async function middleware(request: NextRequest) {
   // Skip auth check if Supabase is not yet configured OR in dev bypass mode
   const devBypass = process.env.NEXT_PUBLIC_DEV_BYPASS === 'true'
   if (!supabaseUrl || !supabaseKey || supabaseUrl.startsWith('COLE_') || !supabaseUrl.startsWith('http') || devBypass) {
+    // Em dev bypass, redirecionar /login → / automaticamente
+    if (request.nextUrl.pathname.startsWith('/login')) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
     return NextResponse.next({ request })
   }
 
