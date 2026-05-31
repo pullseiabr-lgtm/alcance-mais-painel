@@ -29,6 +29,9 @@
     "app/api/image/analyze/route.ts": {
       "maxDuration": 40
     },
+    "app/api/image/enhance/route.ts": {
+      "maxDuration": 90
+    },
     "app/api/manus/gerar-imagem/route.ts": {
       "maxDuration": 300
     }

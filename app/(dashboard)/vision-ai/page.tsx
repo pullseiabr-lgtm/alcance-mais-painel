@@ -278,31 +278,32 @@ export default function VisionAIPage() {
     finally { setAppSt('ready') }
   }
 
-  // ─── Enhance with Magnific AI ─────────────────────────────────────────────
+  // ─── Enhance with fal.ai ─────────────────────────────────────────────────
 
   async function enhanceWithAI() {
     if (!originalSrc) return
     setAppSt('enhancing')
     try {
-      const dataRes = await fetch(originalSrc)
-      const blob    = await dataRes.blob()
-      const form    = new FormData()
-      form.append('image',        blob, fileName || 'foto.jpg')
-      form.append('scaleFactor',  '2')
-      form.append('creativity',   '3')
-      form.append('hdr',          '3')
-      form.append('resemblance',  '8')
-      form.append('optimizedFor', 'standard_photography')
-      // Usa o melhor prompt disponível: Claude > banco > padrão da categoria
+      // Extrai base64 do data URL
+      const [header, imageBase64] = originalSrc.split(',')
+      const mediaType = header.split(';')[0].split(':')[1]
+
       const cat = (analysis?.category as FoodCat) || 'geral'
       const bestPrompt = getBestPrompt(cat, analysis?.prompt || '')
-      form.append('prompt', bestPrompt)
 
-      const res = await fetch('/api/magnific/enhance', { method: 'POST', body: form })
+      const res = await fetch('/api/image/enhance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64, mediaType, prompt: bestPrompt, category: cat }),
+      })
 
       if (!res.ok) {
         const err = await res.json()
-        showToast(err.howTo ? '🔑 Configure MAGNIFIC_API_KEY para usar IA (veja .env.local)' : (err.error || 'Erro'), 'er')
+        if (err.needsKey) {
+          showToast('🔑 Configure FAL_KEY no .env.local — veja fal.ai/dashboard/keys', 'er')
+        } else {
+          showToast(err.error || 'Erro ao melhorar imagem', 'er')
+        }
         return
       }
 
@@ -314,7 +315,7 @@ export default function VisionAIPage() {
         { original: originalSrc, enhanced: enhancedUrl, food: analysis?.foodType || 'Prato', ts: Date.now() },
         ...prev.slice(0, 7),
       ])
-      showToast('✨ Foto melhorada com Magnific AI!')
+      showToast('✨ Foto melhorada com fal.ai!')
     } catch { showToast('Erro ao melhorar. Tente novamente.', 'er') }
     finally { setAppSt('ready') }
   }
@@ -581,7 +582,7 @@ export default function VisionAIPage() {
             <div style={{ display: 'flex', gap: 8 }}>
               <button className="btn btn-al" style={{ flex: 1, justifyContent: 'center', padding: '10px', fontSize: 12 }}
                 onClick={enhanceWithAI} disabled={isLoading}>
-                {appSt === 'enhancing' ? '⟳ Processando…' : '✨ Melhorar com Magnific AI'}
+                {appSt === 'enhancing' ? '⟳ Processando…' : '✨ Melhorar com fal.ai'}
               </button>
               <button className="btn" style={{ padding: '10px 16px', fontSize: 12 }}
                 onClick={() => downloadFor(selPlatform)} disabled={isLoading}>
@@ -678,9 +679,9 @@ export default function VisionAIPage() {
                   background: 'linear-gradient(135deg, rgba(255,107,53,.07) 0%, rgba(232,0,45,.07) 100%)',
                   border: '1px solid rgba(255,107,53,.2)', borderRadius: 'var(--r2)', padding: 14,
                 }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--wh)', marginBottom: 6 }}>✨ IA Profissional</div>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--wh)', marginBottom: 6 }}>✨ IA Profissional — fal.ai</div>
                   <div style={{ fontSize: 10, color: 'var(--gr3)', marginBottom: 10, lineHeight: 1.5 }}>
-                    Magnific AI melhora resolução, nitidez, cores e apetitosidade com inteligência artificial real.
+                    fal.ai Clarity Upscaler aumenta resolução 2×, melhora nitidez e apetitosidade.
                     Preserva aparência natural — sem queijo plástico.
                   </div>
                   <button className="btn" onClick={enhanceWithAI} disabled={isLoading} style={{
@@ -688,10 +689,10 @@ export default function VisionAIPage() {
                     background: 'rgba(255,107,53,.15)', color: '#FF6B35',
                     border: '1px solid rgba(255,107,53,.3)', fontSize: 11,
                   }}>
-                    {appSt === 'enhancing' ? '⟳ Processando…' : '🚀 Melhorar com Magnific AI'}
+                    {appSt === 'enhancing' ? '⟳ Processando…' : '🚀 Melhorar com fal.ai'}
                   </button>
                   <div style={{ fontSize: 9, color: 'var(--gr)', marginTop: 6, textAlign: 'center' }}>
-                    Requer MAGNIFIC_API_KEY em .env.local
+                    Requer FAL_KEY em .env.local — grátis em fal.ai/dashboard/keys
                   </div>
                 </div>
               </div>
