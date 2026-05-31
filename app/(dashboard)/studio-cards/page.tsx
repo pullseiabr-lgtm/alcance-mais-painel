@@ -201,53 +201,72 @@ async function renderCanvas(
     drawText(cfg.cta, ctaY + ctaH / 2, 26, '#FFFFFF', '700', 0)
   }
 
-  // 7. Logo da marca (rodapé centralizado) — usa imagem real se tiver brand kit
+  // 7. Rodapé centralizado — logo da marca ou nome em texto
+  const STRIP_H = Math.round(canvas.height * 0.10)   // faixa = 10% da altura
+  const stripY  = canvas.height - STRIP_H
+
   const brandLogoSrc = brand?.logoBase64 && brand?.logoMime
     ? `data:${brand.logoMime};base64,${brand.logoBase64}` : null
 
+  // Desenha faixa de fundo PRIMEIRO (sempre visível)
+  const stripGrad = ctx.createLinearGradient(0, stripY, 0, canvas.height)
+  stripGrad.addColorStop(0, 'rgba(0,0,0,0.0)')
+  stripGrad.addColorStop(0.3, 'rgba(0,0,0,0.55)')
+  stripGrad.addColorStop(1,   'rgba(0,0,0,0.75)')
+  ctx.fillStyle = stripGrad
+  ctx.fillRect(0, stripY - STRIP_H * 0.3, canvas.width, STRIP_H * 1.3)
+
   if (brandLogoSrc) {
-    // Rodapé: logo real da marca
+    // Carrega logo real da marca
     const logoImg = new Image()
-    logoImg.src = brandLogoSrc
+    logoImg.src   = brandLogoSrc
     await new Promise<void>(res => { logoImg.onload = () => res(); logoImg.onerror = () => res() })
 
-    const maxLogoH = canvas.height * 0.07   // máx 7% da altura
-    const maxLogoW = canvas.width  * 0.35   // máx 35% da largura
-    const ratio    = logoImg.naturalWidth / logoImg.naturalHeight
-    let lw = maxLogoW, lh = maxLogoW / ratio
-    if (lh > maxLogoH) { lh = maxLogoH; lw = lh * ratio }
+    // Escala o logo para caber na faixa (máx 65% da altura da faixa, máx 40% da largura)
+    const maxH  = STRIP_H * 0.65
+    const maxW  = canvas.width * 0.40
+    const ratio = logoImg.naturalWidth / (logoImg.naturalHeight || 1)
+    let lw = maxW, lh = maxW / ratio
+    if (lh > maxH) { lh = maxH; lw = lh * ratio }
 
-    const lx  = canvas.width  / 2 - lw / 2
-    const ly  = canvas.height * 0.925 - lh / 2
+    // Centraliza dentro da faixa
+    const lx = canvas.width / 2 - lw / 2
+    const ly = stripY + STRIP_H / 2 - lh / 2
 
-    // Faixa de fundo semi-transparente
-    const stripH = lh + 20 * scale
-    ctx.fillStyle = 'rgba(0,0,0,0.45)'
-    ctx.fillRect(0, canvas.height - stripH - 4, canvas.width, stripH + 8)
-
-    // Sombra do logo
-    ctx.shadowColor = 'rgba(0,0,0,0.8)'
-    ctx.shadowBlur  = 12
+    ctx.shadowColor = 'rgba(0,0,0,0.7)'
+    ctx.shadowBlur  = 10
     ctx.drawImage(logoImg, lx, ly, lw, lh)
     ctx.shadowBlur  = 0
 
+    // Tagline ao lado do logo (se tiver)
+    if (brand?.tagline) {
+      const tagSize = Math.round(16 * scale)
+      ctx.font         = `400 ${tagSize}px "Plus Jakarta Sans", sans-serif`
+      ctx.fillStyle    = 'rgba(255,255,255,0.6)'
+      ctx.textAlign    = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(brand.tagline, canvas.width / 2, stripY + STRIP_H * 0.82)
+    }
+
   } else if (cfg.showLogo && cfg.logoText) {
-    // Fallback: texto da marca no rodapé centralizado
-    const textSize = 22 * scale
-    ctx.font         = `800 ${Math.round(textSize)}px "Plus Jakarta Sans", sans-serif`
+    // Fallback texto — nome da marca + cor principal
+    const nameSize = Math.round(26 * scale)
+    ctx.font         = `800 ${nameSize}px "Plus Jakarta Sans", sans-serif`
     ctx.fillStyle    = cfg.cor1 || '#00C4B4'
     ctx.textAlign    = 'center'
     ctx.textBaseline = 'middle'
     ctx.shadowColor  = 'rgba(0,0,0,0.9)'
-    ctx.shadowBlur   = 10
+    ctx.shadowBlur   = 12
+    ctx.fillText(cfg.logoText, canvas.width / 2, stripY + STRIP_H * 0.42)
+    ctx.shadowBlur   = 0
 
-    // Faixa de fundo
-    const stripH = textSize * 2.5
-    ctx.fillStyle = 'rgba(0,0,0,0.4)'
-    ctx.fillRect(0, canvas.height - stripH, canvas.width, stripH)
-    ctx.fillStyle = cfg.cor1 || '#00C4B4'
-    ctx.fillText(cfg.logoText, canvas.width / 2, canvas.height - stripH / 2)
-    ctx.shadowBlur = 0
+    // Tagline se tiver
+    if (brand?.tagline) {
+      const tagSize = Math.round(15 * scale)
+      ctx.font         = `400 ${tagSize}px "Plus Jakarta Sans", sans-serif`
+      ctx.fillStyle    = 'rgba(255,255,255,0.55)'
+      ctx.fillText(brand.tagline, canvas.width / 2, stripY + STRIP_H * 0.78)
+    }
   }
 }
 
