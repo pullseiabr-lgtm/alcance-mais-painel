@@ -99,6 +99,13 @@ const nav: NavSection[] = [
         tagColor: '#FFD700',
       },
       {
+        href: '/vision-ai',
+        label: 'Vision AI',
+        icon: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><path d="M12 5v2M12 17v2M5 12H3M21 12h-2"/></>,
+        tag: 'Food',
+        tagColor: '#FF6B35',
+      },
+      {
         href: '/ifood',
         label: 'Expert iFood',
         icon: <><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></>,
