@@ -85,6 +85,13 @@ const nav: NavSection[] = [
         tagColor: '#FF9500',
       },
       {
+        href: '/video-ia',
+        label: 'Gerador de Vídeo',
+        icon: <><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/><circle cx="5" cy="9" r="1"/></>,
+        tag: 'Grátis',
+        tagColor: '#22C55E',
+      },
+      {
         href: '/studio-cards',
         label: 'Studio de Cards',
         icon: <><rect x="3" y="3" width="18" height="18" rx="3" ry="3"/><path d="M3 9h18M9 21V9"/></>,
