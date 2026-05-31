@@ -25,6 +25,12 @@
     },
     "app/api/dev/chat/route.ts": {
       "maxDuration": 60
+    },
+    "app/api/image/analyze/route.ts": {
+      "maxDuration": 40
+    },
+    "app/api/manus/gerar-imagem/route.ts": {
+      "maxDuration": 300
     }
   }
 }

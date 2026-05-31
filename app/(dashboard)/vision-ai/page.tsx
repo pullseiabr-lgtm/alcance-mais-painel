@@ -31,6 +31,36 @@ interface Adj {
 
 const DEFAULT_ADJ: Adj = { brightness: 0, contrast: 0, saturation: 0, warmth: 0 }
 
+// Ajustes inteligentes específicos por categoria de alimento
+// Preservam aparência natural — sem exagero (Editor Humanizado)
+const CATEGORY_ADJ: Record<FoodCat, Adj> = {
+  pizza:         { brightness: 5,  contrast: 22, saturation: 32, warmth: 18 }, // Queijo dourado, molho vivo
+  hamburguer:    { brightness: 3,  contrast: 28, saturation: 35, warmth: 20 }, // Carne suculenta, brioche brilhante
+  sushi:         { brightness: 12, contrast: 14, saturation: 18, warmth: -8 }, // Salmão fresco, tons frios limpos
+  drink:         { brightness: 10, contrast: 16, saturation: 28, warmth: 2  }, // Cores vibrantes, gelo nítido
+  churrasco:     { brightness: 2,  contrast: 32, saturation: 38, warmth: 22 }, // Crosta dourada, fumaça real
+  sobremesa:     { brightness: 10, contrast: 18, saturation: 28, warmth: 10 }, // Cores doces, cobertura brilhante
+  massa:         { brightness: 8,  contrast: 20, saturation: 30, warmth: 14 }, // Molho vibrante, queijo derretido
+  frutos_do_mar: { brightness: 12, contrast: 16, saturation: 25, warmth: -4 }, // Frescor, reflexo natural
+  geral:         { brightness: 8,  contrast: 18, saturation: 25, warmth: 5  },
+}
+
+// Prompts profissionais por categoria (base para o Magnific)
+const CATEGORY_PROMPTS: Record<FoodCat, string> = {
+  pizza:         'professional pizza food photography, golden melted mozzarella cheese, vibrant tomato sauce, crispy golden crust, steam rising, dark premium background, studio lighting, shallow depth of field, appetizing',
+  hamburguer:    'professional burger food photography, juicy beef patty, melted cheese dripping, glossy brioche bun, fresh vegetables, dark moody background, dramatic side lighting, high contrast, restaurant quality',
+  sushi:         'professional sushi food photography, fresh salmon sashimi, glistening rice, precise knife cuts, minimalist white background, clean composition, natural soft lighting, Japanese restaurant aesthetic',
+  drink:         'professional beverage photography, refreshing drink, ice cubes clarity, condensation droplets, vibrant colors, studio lighting, clean background, commercial quality',
+  churrasco:     'professional barbecue food photography, charred crust, juicy interior, smoke effect, rustic wooden board, warm amber lighting, dramatic shadows, appetizing grilled texture',
+  sobremesa:     'professional dessert food photography, glossy frosting, vibrant colors, soft lighting, elegant plating, pastel background, shallow depth of field, appetizing sweet texture',
+  massa:         'professional pasta food photography, rich tomato sauce, melted cheese, steam rising, rustic plate, warm Italian restaurant lighting, shallow depth of field, appetizing',
+  frutos_do_mar: 'professional seafood food photography, fresh glistening texture, natural colors, clean minimal background, soft diffused lighting, restaurant quality plating',
+  geral:         'professional food photography, appetizing, sharp details, warm studio lighting, restaurant quality, commercial photography, vibrant colors',
+}
+
+// Banco de Prompts — chave para localStorage
+const PROMPT_BANK_KEY = 'amore_vision_prompt_bank'
+
 const FOOD_CATS: Record<FoodCat, { label: string; icon: string; color: string }> = {
   pizza:        { label: 'Pizza',         icon: '🍕', color: '#FF6B35' },
   hamburguer:   { label: 'Hambúrguer',    icon: '🍔', color: '#C07820' },
@@ -165,6 +195,29 @@ export default function VisionAIPage() {
     document.addEventListener('touchmove', move); document.addEventListener('touchend', end)
   }, [])
 
+  // ─── Prompt Bank ─────────────────────────────────────────────────────────
+
+  function loadPromptBank(): Record<string, string> {
+    try { return JSON.parse(localStorage.getItem(PROMPT_BANK_KEY) || '{}') } catch { return {} }
+  }
+
+  function saveToPromptBank(category: FoodCat, foodType: string, prompt: string) {
+    try {
+      const bank = loadPromptBank()
+      bank[category] = prompt
+      bank[`last_${category}`] = foodType
+      bank[`ts_${category}`] = String(Date.now())
+      localStorage.setItem(PROMPT_BANK_KEY, JSON.stringify(bank))
+    } catch { /* ignore */ }
+  }
+
+  function getBestPrompt(category: FoodCat, claudePrompt: string): string {
+    // Usa o prompt gerado pelo Claude se tiver boa qualidade, senão usa o do banco ou padrão da categoria
+    if (claudePrompt && claudePrompt.length > 40) return claudePrompt
+    const bank = loadPromptBank()
+    return bank[category] || CATEGORY_PROMPTS[category] || CATEGORY_PROMPTS.geral
+  }
+
   // ─── Preset apply ─────────────────────────────────────────────────────────
 
   function applyPreset(p: typeof PRESETS[0]) {
@@ -174,12 +227,20 @@ export default function VisionAIPage() {
     setSliderPos(50)
   }
 
+  function applyCategoryAdjustments(cat: FoodCat) {
+    setAdj(CATEGORY_ADJ[cat])
+    setActivePreset(`cat_${cat}`)
+    setEnhancedSrc(null)
+    setSliderPos(50)
+  }
+
   function suggestPreset(ctx: string, cat: FoodCat) {
-    if (ctx === 'ifood')    return PRESETS.find(p => p.id === 'ifood')!
-    if (ctx === 'delivery') return PRESETS.find(p => p.id === 'delivery')!
+    // Primeiro tenta aplicar ajuste inteligente por categoria de alimento
+    if (cat !== 'geral') return null // vai usar applyCategoryAdjustments diretamente
+    if (ctx === 'ifood')     return PRESETS.find(p => p.id === 'ifood')!
+    if (ctx === 'delivery')  return PRESETS.find(p => p.id === 'delivery')!
     if (ctx === 'instagram') return PRESETS.find(p => p.id === 'instagram')!
-    if (ctx === 'promo')    return PRESETS.find(p => p.id === 'promo')!
-    if (cat  === 'sushi')   return PRESETS.find(p => p.id === 'cardapio')!
+    if (ctx === 'promo')     return PRESETS.find(p => p.id === 'promo')!
     return PRESETS.find(p => p.id === 'food-porn')!
   }
 
@@ -199,8 +260,20 @@ export default function VisionAIPage() {
       if (!res.ok) { showToast((await res.json()).error || 'Erro na análise', 'er'); return }
       const data: FoodAnalysis = await res.json()
       setAnalysis(data)
-      applyPreset(suggestPreset(data.bestContext, data.category))
-      showToast(`🍽️ ${data.foodType} • Score: ${data.qualityScore}/10`)
+
+      // Aplica ajustes inteligentes específicos para o tipo de alimento identificado
+      const cat = data.category as FoodCat
+      if (cat !== 'geral') {
+        applyCategoryAdjustments(cat)
+      } else {
+        const preset = suggestPreset(data.bestContext, cat)
+        if (preset) applyPreset(preset)
+      }
+
+      // Salva no banco de prompts para uso futuro
+      saveToPromptBank(cat, data.foodType, data.prompt)
+
+      showToast(`🍽️ ${data.foodType} • Score: ${data.qualityScore}/10 • Ajustes aplicados!`)
     } catch { showToast('Erro ao conectar. Verifique ANTHROPIC_API_KEY.', 'er') }
     finally { setAppSt('ready') }
   }
@@ -220,7 +293,10 @@ export default function VisionAIPage() {
       form.append('hdr',          '3')
       form.append('resemblance',  '8')
       form.append('optimizedFor', 'standard_photography')
-      form.append('prompt', analysis?.prompt || 'professional food photography, appetizing, sharp details, restaurant quality, warm lighting, high resolution')
+      // Usa o melhor prompt disponível: Claude > banco > padrão da categoria
+      const cat = (analysis?.category as FoodCat) || 'geral'
+      const bestPrompt = getBestPrompt(cat, analysis?.prompt || '')
+      form.append('prompt', bestPrompt)
 
       const res = await fetch('/api/magnific/enhance', { method: 'POST', body: form })
 
@@ -705,6 +781,22 @@ export default function VisionAIPage() {
                         ))}
                       </div>
                     )}
+
+                    {/* Food-specific adjustments info */}
+                    <div style={{
+                      background: 'rgba(255,107,53,.06)', border: '1px solid rgba(255,107,53,.18)',
+                      borderRadius: 'var(--r2)', padding: 12,
+                    }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, color: '#FF6B35', marginBottom: 6 }}>
+                        🧠 Ajustes Inteligentes Aplicados
+                      </div>
+                      <div style={{ fontSize: 9, color: 'var(--gr3)', lineHeight: 1.5 }}>
+                        {cat ? `${cat.icon} ${cat.label}: brilho ${CATEGORY_ADJ[analysis.category as FoodCat].brightness > 0 ? '+' : ''}${CATEGORY_ADJ[analysis.category as FoodCat].brightness}, contraste +${CATEGORY_ADJ[analysis.category as FoodCat].contrast}, saturação +${CATEGORY_ADJ[analysis.category as FoodCat].saturation}, temperatura ${CATEGORY_ADJ[analysis.category as FoodCat].warmth > 0 ? '+' : ''}${CATEGORY_ADJ[analysis.category as FoodCat].warmth}` : ''}
+                      </div>
+                      <div style={{ fontSize: 9, color: 'var(--gr)', marginTop: 4 }}>
+                        ✅ Prompt salvo no banco para próximas melhorias
+                      </div>
+                    </div>
 
                     <button className="btn" style={{ fontSize: 11, padding: '8px', justifyContent: 'center' }}
                       onClick={analyzeImage} disabled={isLoading}>
