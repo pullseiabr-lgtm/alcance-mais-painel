@@ -70,30 +70,44 @@ Rules:
       ? promptRes.content[0].text.trim()
       : `${mood}, professional marketing background, clean space for text overlay, ${color} accent tones`
 
-    // ── 2. fal.ai Flux Pro gera a imagem ─────────────────────────────────────
-    const falRes = await fetch('https://fal.run/fal-ai/flux-pro/v1.1', {
-      method: 'POST',
-      headers: { Authorization: `Key ${falKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt: visualPrompt,
-        image_size: { width: tam.w, height: tam.h },
-        num_inference_steps: 25,
-        safety_tolerance: '5',
-        output_format: 'jpeg',
-        num_images: 1,
-      }),
-    })
+    // ── 2. fal.ai — tenta Flux Schnell (rápido) com fallback para Flux Dev ──────
+    // flux/schnell: ~3s, grátis nos créditos free, suficiente para backgrounds
+    const FAL_MODELS = ['fal-ai/flux/schnell', 'fal-ai/flux/dev']
+    let imageUrl: string | undefined
 
-    if (!falRes.ok) {
-      const errText = await falRes.text()
-      return NextResponse.json({ error: `fal.ai (${falRes.status}): ${errText}` }, { status: falRes.status })
+    for (const model of FAL_MODELS) {
+      const falRes = await fetch(`https://fal.run/${model}`, {
+        method: 'POST',
+        headers: { Authorization: `Key ${falKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt:              visualPrompt,
+          image_size:          tam.falSize,   // 'square_hd', 'landscape_16_9', etc.
+          num_inference_steps: model.includes('schnell') ? 4 : 28,
+          num_images:          1,
+          output_format:       'jpeg',
+        }),
+      })
+
+      // Lê resposta como texto primeiro para evitar JSON.parse em erros HTML
+      const rawText = await falRes.text()
+
+      if (!falRes.ok) {
+        console.warn(`[studio/gerar] ${model} falhou (${falRes.status}): ${rawText.slice(0, 200)}`)
+        continue  // tenta próximo modelo
+      }
+
+      try {
+        const falData = JSON.parse(rawText)
+        imageUrl = falData.images?.[0]?.url
+        if (imageUrl) break  // sucesso
+      } catch {
+        console.warn(`[studio/gerar] ${model} retornou não-JSON: ${rawText.slice(0, 100)}`)
+        continue
+      }
     }
 
-    const falData = await falRes.json()
-    const imageUrl = falData.images?.[0]?.url as string | undefined
-
     if (!imageUrl) {
-      return NextResponse.json({ error: 'fal.ai não retornou imagem' }, { status: 500 })
+      return NextResponse.json({ error: 'Nenhum modelo fal.ai retornou imagem. Verifique FAL_KEY.' }, { status: 500 })
     }
 
     // ── 3. Proxy da imagem gerada ─────────────────────────────────────────────
