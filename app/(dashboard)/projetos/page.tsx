@@ -1,5 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+
+const STORAGE_KEY = 'alcance_projetos_v1'
 
 type Projeto = {
   id: number; titulo: string; cliente: string; responsavel: string;
@@ -23,17 +25,39 @@ const priorColor: Record<string, string> = { Alta: 'badge-er', Média: 'badge-wr
 const empty: Omit<Projeto, 'id'> = { titulo: '', cliente: '', responsavel: '', status: 'Planejamento', prioridade: 'Média', prazo: '', progresso: 0, descricao: '' }
 
 export default function ProjetosPage() {
-  const [projetos, setProjetos] = useState(inicial)
-  const [view, setView] = useState<'lista' | 'kanban'>('lista')
-  const [modal, setModal] = useState(false)
-  const [form, setForm] = useState<Omit<Projeto, 'id'>>(empty)
-  const [editing, setEditing] = useState<number | null>(null)
-  const [search, setSearch] = useState('')
+  const [projetos, setProjetos] = useState<Projeto[]>([])
+  const [loaded, setLoaded]     = useState(false)
+  const [view, setView]         = useState<'lista' | 'kanban'>('lista')
+  const [modal, setModal]       = useState(false)
+  const [form, setForm]         = useState<Omit<Projeto, 'id'>>(empty)
+  const [editing, setEditing]   = useState<number | null>(null)
+  const [search, setSearch]     = useState('')
+  const [confirmDel, setConfirmDel] = useState<number | null>(null)
 
-  const filtered = projetos.filter(p => p.titulo.toLowerCase().includes(search.toLowerCase()) || p.cliente.toLowerCase().includes(search.toLowerCase()))
+  // ── Carrega do localStorage (ou usa dados iniciais) ─────────────────────
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      setProjetos(saved ? JSON.parse(saved) : inicial)
+    } catch {
+      setProjetos(inicial)
+    }
+    setLoaded(true)
+  }, [])
+
+  // ── Persiste toda vez que projetos mudar ────────────────────────────────
+  useEffect(() => {
+    if (!loaded) return
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(projetos))
+  }, [projetos, loaded])
+
+  const filtered = projetos.filter(p =>
+    p.titulo.toLowerCase().includes(search.toLowerCase()) ||
+    p.cliente.toLowerCase().includes(search.toLowerCase())
+  )
 
   function save() {
-    if (!form.titulo) return
+    if (!form.titulo.trim()) return
     if (editing !== null) {
       setProjetos(ps => ps.map(p => p.id === editing ? { ...form, id: editing } : p))
     } else {
@@ -43,7 +67,20 @@ export default function ProjetosPage() {
   }
 
   function edit(p: Projeto) {
-    const { id, ...rest } = p; setForm(rest); setEditing(id); setModal(true)
+    const { id, ...rest } = p
+    setForm(rest); setEditing(id); setModal(true)
+  }
+
+  function deleteConfirmed() {
+    if (confirmDel === null) return
+    setProjetos(ps => ps.filter(p => p.id !== confirmDel))
+    setConfirmDel(null)
+    setModal(false)
+    setEditing(null)
+  }
+
+  function closeModal() {
+    setModal(false); setForm(empty); setEditing(null)
   }
 
   const cols = ['Planejamento', 'Em Andamento', 'Revisão', 'Concluído']
@@ -103,7 +140,11 @@ export default function ProjetosPage() {
                     <td><span className={`badge ${priorColor[p.prioridade]}`}>{p.prioridade}</span></td>
                     <td><span className={`badge ${statusColor[p.status]}`}>{p.status}</span></td>
                     <td>
-                      <button className="btn btn-ghost btn-sm" onClick={() => edit(p)}>Editar</button>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button className="btn btn-ghost btn-sm" onClick={() => edit(p)}>✏️ Editar</button>
+                        <button className="btn btn-ghost btn-sm" style={{ color: 'var(--er)' }}
+                          onClick={() => setConfirmDel(p.id)}>🗑️</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -122,9 +163,16 @@ export default function ProjetosPage() {
                   </div>
                   <div className="k-cards">
                     {cards.map(p => (
-                      <div key={p.id} className="k-card" onClick={() => edit(p)}>
-                        <div className="k-card-title">{p.titulo}</div>
-                        <div style={{ fontSize: 10, color: 'var(--gr3)', marginBottom: 8 }}>{p.cliente}</div>
+                      <div key={p.id} className="k-card">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6, marginBottom: 4 }}>
+                          <div className="k-card-title" style={{ flex: 1, cursor: 'pointer' }} onClick={() => edit(p)}>{p.titulo}</div>
+                          <button onClick={() => setConfirmDel(p.id)} style={{
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: 'var(--gr3)', fontSize: 12, padding: '0 2px', flexShrink: 0,
+                            lineHeight: 1,
+                          }}>🗑️</button>
+                        </div>
+                        <div style={{ fontSize: 10, color: 'var(--gr3)', marginBottom: 8, cursor: 'pointer' }} onClick={() => edit(p)}>{p.cliente}</div>
                         <div className="progress-bar" style={{ marginBottom: 8 }}>
                           <div className="progress-fill" style={{ width: `${p.progresso}%` }} />
                         </div>
@@ -142,10 +190,28 @@ export default function ProjetosPage() {
         )}
       </div>
 
+      {/* Modal de confirmação de exclusão */}
+      {confirmDel !== null && (
+        <div className="modal-overlay" onClick={() => setConfirmDel(null)}>
+          <div className="modal" style={{ maxWidth: 380 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-title" style={{ color: 'var(--er)' }}>🗑️ Excluir Projeto</div>
+            <p style={{ fontSize: 13, color: 'var(--gr3)', margin: '12px 0 20px' }}>
+              Tem certeza que deseja excluir <strong style={{ color: 'var(--wh)' }}>"{projetos.find(p => p.id === confirmDel)?.titulo}"</strong>?
+              <br/><span style={{ fontSize: 11 }}>Esta ação não pode ser desfeita.</span>
+            </p>
+            <div className="modal-foot">
+              <button className="btn btn-ghost" onClick={() => setConfirmDel(null)}>Cancelar</button>
+              <button className="btn" style={{ background: 'var(--er)', color: '#fff', border: 'none' }}
+                onClick={deleteConfirmed}>Excluir</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modal && (
-        <div className="modal-overlay" onClick={() => setModal(false)}>
+        <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-title">{editing ? 'Editar Projeto' : 'Novo Projeto'}</div>
+            <div className="modal-title">{editing !== null ? 'Editar Projeto' : 'Novo Projeto'}</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div className="field"><label>Título</label>
                 <input className="inp" value={form.titulo} onChange={e => setForm({ ...form, titulo: e.target.value })} />
@@ -179,8 +245,14 @@ export default function ProjetosPage() {
               </div>
             </div>
             <div className="modal-foot">
-              <button className="btn btn-ghost" onClick={() => setModal(false)}>Cancelar</button>
-              <button className="btn btn-al" onClick={save}>Salvar</button>
+              {editing !== null && (
+                <button className="btn btn-ghost" style={{ color: 'var(--er)', marginRight: 'auto' }}
+                  onClick={() => { closeModal(); setConfirmDel(editing) }}>
+                  🗑️ Excluir
+                </button>
+              )}
+              <button className="btn btn-ghost" onClick={closeModal}>Cancelar</button>
+              <button className="btn btn-al" onClick={save}>💾 Salvar</button>
             </div>
           </div>
         </div>
