@@ -1,5 +1,6 @@
 'use client'
-import { useState, useRef, useCallback, useEffect, ChangeEvent } from 'react'
+import { useState, useRef, useEffect, ChangeEvent } from 'react'
+import { Brand, listarMarcas } from '@/lib/brands'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -79,6 +80,7 @@ async function renderCanvas(
   bgSrc:  string,
   cfg:    CardConfig,
   tipo:   typeof TIPOS[0],
+  brand?: Brand | null,
 ) {
   const ctx = canvas.getContext('2d')
   if (!ctx) return
@@ -199,16 +201,52 @@ async function renderCanvas(
     drawText(cfg.cta, ctaY + ctaH / 2, 26, '#FFFFFF', '700', 0)
   }
 
-  // 7. Logo text (top left or top right)
-  if (cfg.showLogo && cfg.logoText) {
-    const logoSize = 22 * scale
-    ctx.font      = `800 ${Math.round(logoSize)}px "Plus Jakarta Sans", sans-serif`
-    ctx.fillStyle = cfg.cor1 || '#00C4B4'
-    ctx.textAlign = 'left'
-    ctx.textBaseline = 'top'
+  // 7. Logo da marca (rodapé centralizado) — usa imagem real se tiver brand kit
+  const brandLogoSrc = brand?.logoBase64 && brand?.logoMime
+    ? `data:${brand.logoMime};base64,${brand.logoBase64}` : null
+
+  if (brandLogoSrc) {
+    // Rodapé: logo real da marca
+    const logoImg = new Image()
+    logoImg.src = brandLogoSrc
+    await new Promise<void>(res => { logoImg.onload = () => res(); logoImg.onerror = () => res() })
+
+    const maxLogoH = canvas.height * 0.07   // máx 7% da altura
+    const maxLogoW = canvas.width  * 0.35   // máx 35% da largura
+    const ratio    = logoImg.naturalWidth / logoImg.naturalHeight
+    let lw = maxLogoW, lh = maxLogoW / ratio
+    if (lh > maxLogoH) { lh = maxLogoH; lw = lh * ratio }
+
+    const lx  = canvas.width  / 2 - lw / 2
+    const ly  = canvas.height * 0.925 - lh / 2
+
+    // Faixa de fundo semi-transparente
+    const stripH = lh + 20 * scale
+    ctx.fillStyle = 'rgba(0,0,0,0.45)'
+    ctx.fillRect(0, canvas.height - stripH - 4, canvas.width, stripH + 8)
+
+    // Sombra do logo
     ctx.shadowColor = 'rgba(0,0,0,0.8)'
-    ctx.shadowBlur  = 8
-    ctx.fillText(cfg.logoText, canvas.width * 0.05, canvas.height * 0.04)
+    ctx.shadowBlur  = 12
+    ctx.drawImage(logoImg, lx, ly, lw, lh)
+    ctx.shadowBlur  = 0
+
+  } else if (cfg.showLogo && cfg.logoText) {
+    // Fallback: texto da marca no rodapé centralizado
+    const textSize = 22 * scale
+    ctx.font         = `800 ${Math.round(textSize)}px "Plus Jakarta Sans", sans-serif`
+    ctx.fillStyle    = cfg.cor1 || '#00C4B4'
+    ctx.textAlign    = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.shadowColor  = 'rgba(0,0,0,0.9)'
+    ctx.shadowBlur   = 10
+
+    // Faixa de fundo
+    const stripH = textSize * 2.5
+    ctx.fillStyle = 'rgba(0,0,0,0.4)'
+    ctx.fillRect(0, canvas.height - stripH, canvas.width, stripH)
+    ctx.fillStyle = cfg.cor1 || '#00C4B4'
+    ctx.fillText(cfg.logoText, canvas.width / 2, canvas.height - stripH / 2)
     ctx.shadowBlur = 0
   }
 }
@@ -216,11 +254,13 @@ async function renderCanvas(
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StudioCardsPage() {
-  const [cfg, setCfg]         = useState<CardConfig>(DEFAULT)
-  const [bgSrc, setBgSrc]     = useState<string | null>(null)
-  const [appSt, setAppSt]     = useState<AppSt>('idle')
-  const [prompt, setPrompt]   = useState('')
-  const [history, setHistory] = useState<HistoryItem[]>([])
+  const [cfg, setCfg]           = useState<CardConfig>(DEFAULT)
+  const [bgSrc, setBgSrc]       = useState<string | null>(null)
+  const [appSt, setAppSt]       = useState<AppSt>('idle')
+  const [prompt, setPrompt]     = useState('')
+  const [history, setHistory]   = useState<HistoryItem[]>([])
+  const [brands, setBrands]     = useState<Brand[]>([])
+  const [activeBrand, setActiveBrand] = useState<Brand | null>(null)
   const [toast, setToast]     = useState<{ msg: string; type: 'ok' | 'er' } | null>(null)
   const [tab, setTab]         = useState<'form' | 'texto' | 'estilo'>('form')
 
@@ -236,12 +276,35 @@ export default function StudioCardsPage() {
     setTimeout(() => setToast(null), 4000)
   }
 
+  // ─── Load brands from localStorage ───────────────────────────────────────
+
+  useEffect(() => {
+    setBrands(listarMarcas())
+  }, [])
+
+  // ─── Apply brand kit when selected ───────────────────────────────────────
+
+  function applyBrand(brand: Brand | null) {
+    setActiveBrand(brand)
+    if (brand) {
+      setCfg(prev => ({
+        ...prev,
+        cor1: brand.cor1,
+        cor2: brand.cor2,
+        segmento: brand.segmento || prev.segmento,
+        logoText: brand.nome,
+        showLogo: true,
+      }))
+      showToast(`🏷️ Brand Kit "${brand.nome}" aplicado!`)
+    }
+  }
+
   // ─── Re-render canvas when config or bg changes ────────────────────────────
 
   useEffect(() => {
     if (!bgSrc || !canvasRef.current) return
-    renderCanvas(canvasRef.current, bgSrc, cfg, tipoInfo)
-  }, [bgSrc, cfg, tipoInfo])
+    renderCanvas(canvasRef.current, bgSrc, cfg, tipoInfo, activeBrand)
+  }, [bgSrc, cfg, tipoInfo, activeBrand])
 
   // ─── Generate ──────────────────────────────────────────────────────────────
 
@@ -363,6 +426,68 @@ export default function StudioCardsPage() {
 
         {/* ── LEFT: Controls ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+          {/* Brand Kit selector */}
+          <div style={{ background: 'var(--bk2)', border: '1px solid var(--gr)', borderRadius: 'var(--r2)', padding: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: brands.length > 0 ? 8 : 0 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--gr3)', textTransform: 'uppercase', letterSpacing: '.1em' }}>
+                🏷️ Brand Kit
+              </div>
+              <a href="/marcas" style={{ fontSize: 9, color: 'var(--al)', textDecoration: 'none' }}>
+                {brands.length === 0 ? '+ Cadastrar marca' : 'Gerenciar →'}
+              </a>
+            </div>
+
+            {brands.length === 0 ? (
+              <div style={{ fontSize: 9, color: 'var(--gr3)', textAlign: 'center', padding: '8px 0' }}>
+                Nenhuma marca cadastrada ainda.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                <button
+                  onClick={() => applyBrand(null)}
+                  style={{
+                    padding: '5px 10px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 9, fontWeight: 600,
+                    background: !activeBrand ? 'rgba(0,196,180,.15)' : 'var(--bk3)',
+                    color: !activeBrand ? 'var(--al)' : 'var(--gr3)',
+                    outline: !activeBrand ? '1px solid rgba(0,196,180,.4)' : '1px solid var(--gr)',
+                  }}>
+                  Nenhuma
+                </button>
+                {brands.map(b => {
+                  const logoSrc = b.logoBase64 && b.logoMime ? `data:${b.logoMime};base64,${b.logoBase64}` : null
+                  const isActive = activeBrand?.id === b.id
+                  return (
+                    <button key={b.id} onClick={() => applyBrand(b)} style={{
+                      padding: '5px 10px', borderRadius: 20, border: 'none', cursor: 'pointer',
+                      fontSize: 9, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5,
+                      background: isActive ? `${b.cor1}20` : 'var(--bk3)',
+                      color: isActive ? b.cor1 : 'var(--gr3)',
+                      outline: isActive ? `1px solid ${b.cor1}60` : '1px solid var(--gr)',
+                      transition: 'all .15s',
+                    }}>
+                      {logoSrc
+                        ? <img src={logoSrc} alt="" style={{ height: 14, objectFit: 'contain' }} />
+                        : <div style={{ width: 10, height: 10, borderRadius: '50%', background: b.cor1 }} />
+                      }
+                      {b.nome}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
+            {activeBrand && (
+              <div style={{
+                marginTop: 8, padding: '6px 10px', borderRadius: 8,
+                background: `${activeBrand.cor1}10`,
+                border: `1px solid ${activeBrand.cor1}30`,
+                fontSize: 9, color: activeBrand.cor1, fontWeight: 600,
+              }}>
+                ✅ Cores + logo da <strong>{activeBrand.nome}</strong> aplicados no rodapé
+              </div>
+            )}
+          </div>
 
           {/* Tabs */}
           <div style={{ display: 'flex', gap: 2, background: 'var(--bk3)', borderRadius: 'var(--r2)', padding: 3 }}>
