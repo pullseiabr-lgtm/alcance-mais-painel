@@ -43,6 +43,9 @@
     },
     "app/api/studio/gerar/route.ts": {
       "maxDuration": 60
+    },
+    "app/api/trafego/chat/route.ts": {
+      "maxDuration": 60
     }
   }
 }

@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { seedAmorePaiva } from '@/lib/seed-amore-paiva'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -961,10 +962,20 @@ export default function PlanejamentoPage() {
               <div style={{ fontSize:9,color:'var(--gr3)' }}>Briefing completo · Orçamento · Fases · Criativos · Performance</div>
             </div>
           </div>
-          <button className="btn btn-al" style={{ padding:'8px 18px',fontSize:12 }}
-            onClick={() => { setEditForm(emptyForm()); setEditId(null); setMode('wizard') }}>
-            ➕ Nova Campanha
-          </button>
+          <div style={{ display:'flex', gap:8 }}>
+            <button className="btn" style={{ padding:'8px 14px', fontSize:11, color:'var(--al)', border:'1px solid rgba(0,196,180,.3)', background:'rgba(0,196,180,.08)' }}
+              onClick={() => {
+                seedAmorePaiva()
+                try { setCamps(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]')) } catch {}
+                showToast('✅ Campanha Amore Paiva importada! Verifique Tarefas e Social Planner também.')
+              }}>
+              📥 Importar Amore Paiva
+            </button>
+            <button className="btn btn-al" style={{ padding:'8px 18px',fontSize:12 }}
+              onClick={() => { setEditForm(emptyForm()); setEditId(null); setMode('wizard') }}>
+              ➕ Nova Campanha
+            </button>
+          </div>
         </div>
 
         {/* Stats */}
