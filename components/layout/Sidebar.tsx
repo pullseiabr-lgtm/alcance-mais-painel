@@ -36,6 +36,13 @@ const nav: NavSection[] = [
     sec: 'Marketing',
     items: [
       {
+        href: '/planejamento',
+        label: 'Planejamento',
+        icon: <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></>,
+        tag: 'Novo',
+        tagColor: '#3B82F6',
+      },
+      {
         href: '/trafego',
         label: 'Tráfego PRO',
         icon: <><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></>,
