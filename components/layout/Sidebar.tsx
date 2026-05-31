@@ -33,10 +33,29 @@ const nav: NavSection[] = [
     ],
   },
   {
+    sec: 'Marketing',
+    items: [
+      {
+        href: '/trafego',
+        label: 'Tráfego PRO',
+        icon: <><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></>,
+        tag: 'IA',
+        tagColor: '#F59E0B',
+      },
+      {
+        href: '/social-planner',
+        label: 'Social Planner',
+        icon: <><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="14" r="1"/><circle cx="12" cy="14" r="1"/><circle cx="16" cy="14" r="1"/></>,
+        tag: 'Novo',
+        tagColor: '#EC4899',
+      },
+      { href: '/campanhas', label: 'Campanhas', icon: <><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></> },
+    ],
+  },
+  {
     sec: 'Operações',
     items: [
       { href: '/projetos', label: 'Projetos', icon: <><rect x="2" y="3" width="6" height="4"/><rect x="9" y="3" width="6" height="4"/><rect x="16" y="3" width="6" height="4"/><rect x="2" y="10" width="6" height="11"/><rect x="9" y="10" width="6" height="7"/><rect x="16" y="10" width="6" height="4"/></> },
-      { href: '/campanhas', label: 'Campanhas', icon: <><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></> },
       { href: '/calendario', label: 'Calendário', icon: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></> },
     ],
   },
