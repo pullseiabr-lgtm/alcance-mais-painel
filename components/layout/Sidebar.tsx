@@ -153,6 +153,13 @@ const nav: NavSection[] = [
         tagColor: '#FFD700',
       },
       {
+        href: '/gemini-studio',
+        label: 'Gemini Studio',
+        icon: <><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 7.07 17.07"/><path d="M12 2a10 10 0 0 0-7.07 17.07"/><line x1="12" y1="2" x2="12" y2="22"/></>,
+        tag: 'Google AI',
+        tagColor: '#4285F4',
+      },
+      {
         href: '/vision-ai',
         label: 'Vision AI',
         icon: <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/><path d="M12 5v2M12 17v2M5 12H3M21 12h-2"/></>,
