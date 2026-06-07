@@ -7,6 +7,7 @@ export const PAGINAS = [
   { id: 'propostas',     label: 'Propostas',          path: '/propostas',      secao: 'Clientes' },
   { id: 'projetos',      label: 'Projetos',           path: '/projetos',       secao: 'Operações' },
   { id: 'campanhas',     label: 'Campanhas',          path: '/campanhas',      secao: 'Operações' },
+  { id: 'trafego',       label: 'Tráfego (Growth AI)', path: '/trafego',       secao: 'Operações' },
   { id: 'calendario',    label: 'Calendário',         path: '/calendario',     secao: 'Operações' },
   { id: 'financeiro',    label: 'Financeiro',         path: '/financeiro',     secao: 'Gestão' },
   { id: 'equipe',        label: 'Equipe',             path: '/equipe',         secao: 'Gestão' },
@@ -27,13 +28,13 @@ export const PERMISSOES_PADRAO: Record<Role, PageId[]> = {
   admin: PAGINAS.map(p => p.id) as PageId[],
   gestor: [
     'dashboard','pipeline','clientes','propostas','projetos',
-    'campanhas','calendario','financeiro','equipe','relatorios','agente',
+    'campanhas','trafego','calendario','financeiro','equipe','relatorios','agente',
   ],
   criativo: [
     'dashboard','campanhas','calendario','criador-arte',
     'manus-imagens','editor','figueiredo','agente','ifood',
   ],
-  cliente: ['dashboard','campanhas','relatorios'],
+  cliente: ['dashboard','campanhas','trafego','relatorios'],
   viewer:  ['dashboard'],
 }
 

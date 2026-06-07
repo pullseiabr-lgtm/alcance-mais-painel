@@ -39,3 +39,5 @@ dev2.log
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel

@@ -1,5 +1,9 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
+import Dashboard from './Dashboard'
+import CanalView from './CanalView'
+import InstagramView from './InstagramView'
+import WhatsAppView from './WhatsAppView'
 
 type Msg = { role: 'user' | 'assistant'; content: string }
 
@@ -57,6 +61,7 @@ export default function TrafegoPage() {
   const [input, setInput]     = useState('')
   const [loading, setLoading] = useState(false)
   const [segmento, setSegmento] = useState<'restaurante' | 'evento' | 'delivery'>('restaurante')
+  const [aba, setAba] = useState<'chat' | 'dashboard' | 'meta' | 'google' | 'instagram' | 'whatsapp'>('chat')
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLTextAreaElement>(null)
 
@@ -141,8 +146,29 @@ export default function TrafegoPage() {
           </div>
         </div>
 
-        {/* Segmento selector */}
+        {/* Abas */}
         <div style={{ display: 'flex', gap: 6 }}>
+          {([
+            { id: 'dashboard', label: '📊 Dashboard' },
+            { id: 'meta',      label: '📘 Meta Ads' },
+            { id: 'google',    label: '🔍 Google Ads' },
+            { id: 'instagram', label: '📱 Instagram' },
+            { id: 'whatsapp',  label: '💬 WhatsApp' },
+            { id: 'chat',      label: '🤖 Assistente IA' },
+          ] as const).map(t => (
+            <button key={t.id} onClick={() => setAba(t.id)} style={{
+              padding: '6px 14px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+              border: 'none',
+              background: aba === t.id ? 'rgba(245,158,11,.2)' : 'var(--bk3)',
+              color: aba === t.id ? '#F59E0B' : 'var(--gr3)',
+              outline: aba === t.id ? '1px solid rgba(245,158,11,.4)' : '1px solid var(--gr)',
+              transition: 'all .15s',
+            }}>{t.label}</button>
+          ))}
+        </div>
+
+        {/* Segmento selector */}
+        {aba === 'chat' && <div style={{ display: 'flex', gap: 6 }}>
           {([
             { id: 'restaurante', label: '🍽️ Restaurante' },
             { id: 'delivery',    label: '📦 Delivery' },
@@ -157,9 +183,18 @@ export default function TrafegoPage() {
               transition: 'all .15s',
             }}>{s.label}</button>
           ))}
-        </div>
+        </div>}
       </div>
 
+      {aba !== 'chat' ? (
+        <div style={{ flex: 1, overflow: 'hidden' }}>
+          {aba === 'dashboard' && <Dashboard />}
+          {aba === 'meta' && <CanalView canal="meta" />}
+          {aba === 'google' && <CanalView canal="google" />}
+          {aba === 'instagram' && <InstagramView />}
+          {aba === 'whatsapp' && <WhatsAppView />}
+        </div>
+      ) : <>
       {/* Plataformas */}
       <div style={{
         display: 'flex', gap: 8, padding: '10px 28px',
@@ -314,6 +349,7 @@ export default function TrafegoPage() {
           40% { transform: scale(1); opacity: 1 }
         }
       `}</style>
+      </>}
     </div>
   )
 }

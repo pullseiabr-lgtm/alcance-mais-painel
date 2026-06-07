@@ -70,8 +70,8 @@ create policy "own_profile_select" on public.profiles
 -- =====================================================
 -- admin:    todas as páginas
 -- gestor:   dashboard,pipeline,clientes,propostas,projetos,
---           campanhas,calendario,financeiro,equipe,relatorios,agente
+--           campanhas,trafego,calendario,financeiro,equipe,relatorios,agente
 -- criativo: dashboard,campanhas,calendario,criador-arte,
 --           manus-imagens,editor,figueiredo,agente,ifood
--- cliente:  dashboard,campanhas,relatorios
+-- cliente:  dashboard,campanhas,trafego,relatorios
 -- viewer:   dashboard
