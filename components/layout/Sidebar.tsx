@@ -91,6 +91,39 @@ const nav: NavSection[] = [
     ],
   },
   {
+    sec: 'Agentes IA',
+    items: [
+      {
+        href: '/agente-design',
+        label: 'ARTE+ Designer',
+        icon: <><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></>,
+        tag: 'IA Visual',
+        tagColor: '#EC4899',
+      },
+      {
+        href: '/agente-conteudo',
+        label: 'COPY+ Conteúdo',
+        icon: <><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></>,
+        tag: 'Roteirista',
+        tagColor: '#3B82F6',
+      },
+      {
+        href: '/agente-instagram',
+        label: 'INSIGHT+ Redes',
+        icon: <><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></>,
+        tag: 'Estratégia',
+        tagColor: '#E1306C',
+      },
+      {
+        href: '/agente-campanhas',
+        label: 'TRAFFIC+ Ads',
+        icon: <><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></>,
+        tag: 'Meta/Google',
+        tagColor: '#1877F2',
+      },
+    ],
+  },
+  {
     sec: 'IA',
     items: [
       {
