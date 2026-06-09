@@ -121,11 +121,11 @@ function RenderResult({ tipo, data }: { tipo: Modo; data: Record<string, unknown
     const ideias = (data.ideias as Record<string,string>[] | undefined) ?? []
     return (
       <div>
-        {data.tema_semana && (
+        {(data.tema_semana as string | undefined) && (
           <div style={{ background:`${color}15`, border:`1px solid ${color}30`, borderRadius:10, padding:12, marginBottom:12 }}>
             <div style={{ fontSize:9, fontWeight:700, color, marginBottom:4 }}>🗓️ TEMA DA SEMANA</div>
             <div style={{ fontSize:13, fontWeight:700, color:'var(--wh)' }}>{String(data.tema_semana)}</div>
-            {data.data_ideal && <div style={{ fontSize:10, color:'var(--gr3)', marginTop:3 }}>⏰ {String(data.data_ideal)}</div>}
+            {(data.data_ideal as string | undefined) && <div style={{ fontSize:10, color:'var(--gr3)', marginTop:3 }}>⏰ {String(data.data_ideal)}</div>}
           </div>
         )}
         {ideias.map((idea, i) => (

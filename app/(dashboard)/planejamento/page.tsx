@@ -564,7 +564,7 @@ function CampWizard({ initial, onSave, onClose }: {
       <div style={{ padding:'16px 24px', borderBottom:'1px solid var(--gr)', background:'var(--bk2)', flexShrink:0 }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
           <div style={{ fontSize:16, fontWeight:800, color:'var(--wh)' }}>
-            {form.id ? '✏️ Editar Campanha' : '🆕 Nova Campanha'}
+            {'🆕 Nova Campanha'}
           </div>
           <button onClick={onClose} style={{ background:'none', border:'none', color:'var(--gr3)', cursor:'pointer', fontSize:18 }}>✕</button>
         </div>

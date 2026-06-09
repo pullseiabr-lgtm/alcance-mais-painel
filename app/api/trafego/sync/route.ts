@@ -129,7 +129,7 @@ async function montarLinhaMeta(supabase: any, cliente: any, row: any, data: stri
   return {
     campanha_id: campanhaId,
     cliente_id: cliente.id,
-    canal: 'meta',
+    canal: 'meta' as const,
     data,
     impressoes,
     cliques,
@@ -152,7 +152,7 @@ async function montarLinhaGoogle(supabase: any, cliente: any, row: any, data: st
   return {
     campanha_id: campanhaId,
     cliente_id: cliente.id,
-    canal: 'google',
+    canal: 'google' as const,
     data,
     impressoes: Number(metricas.impressions || 0),
     cliques: Number(metricas.clicks || 0),
