@@ -1,70 +1,88 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { getDashboardKPIs, type DashboardKPIs } from '@/lib/db'
+import { createClient } from '@/lib/supabase/client'
 
-const kpis = [
-  { label: 'Receita Mensal', val: 'R$ 84.500', delta: '+12%', up: true, icon: '💰', color: 'var(--al)' },
-  { label: 'Clientes Ativos', val: '23', delta: '+3', up: true, icon: '🏢', color: 'var(--bl)' },
-  { label: 'Projetos em Andamento', val: '14', delta: '+2', up: true, icon: '📋', color: 'var(--pu)' },
-  { label: 'Campanhas Ativas', val: '8', delta: '-1', up: false, icon: '🚀', color: 'var(--wr)' },
-  { label: 'Leads no Mês', val: '342', delta: '+28%', up: true, icon: '🎯', color: 'var(--ok)' },
-  { label: 'Ticket Médio', val: 'R$ 3.674', delta: '+8%', up: true, icon: '📊', color: 'var(--cy)' },
-]
-
-const recentClients = [
-  { name: 'TechNova Solutions', status: 'Ativo', value: 'R$ 12.000/mês', sector: 'Tecnologia' },
-  { name: 'Construtora Viva Mais', status: 'Ativo', value: 'R$ 8.500/mês', sector: 'Construção' },
-  { name: 'Dr. Marcos Cardiologia', status: 'Onboarding', value: 'R$ 4.200/mês', sector: 'Saúde' },
-  { name: 'Sabor & Arte Restaurante', status: 'Ativo', value: 'R$ 3.800/mês', sector: 'Food' },
-  { name: 'Academia FitLife', status: 'Pausado', value: 'R$ 2.900/mês', sector: 'Fitness' },
-]
-
-const activities = [
-  { time: 'Hoje, 09:14', text: 'Relatório enviado para TechNova Solutions', type: 'report' },
-  { time: 'Hoje, 08:52', text: 'Nova proposta criada: Construtora Viva Mais — Fase 2', type: 'proposal' },
-  { time: 'Ontem, 17:30', text: 'Campanha Google Ads otimizada — Dr. Marcos', type: 'campaign' },
-  { time: 'Ontem, 15:10', text: 'Reunião de briefing com Academia FitLife', type: 'meeting' },
-  { time: 'Ontem, 11:05', text: 'Novo cliente: Sabor & Arte Restaurante', type: 'client' },
-]
+const fmt = (v: number) =>
+  v >= 1000 ? `R$ ${(v / 1000).toFixed(1).replace('.', ',')}k` : `R$ ${v.toLocaleString('pt-BR')}`
 
 const statusColor: Record<string, string> = {
-  Ativo: 'badge-ok', Onboarding: 'badge-al', Pausado: 'badge-wr',
-}
-const actIcon: Record<string, string> = {
-  report: '📄', proposal: '📝', campaign: '🎯', meeting: '📅', client: '🏢',
+  ativo: 'badge-ok', onboarding: 'badge-al', pausado: 'badge-wr', inativo: 'badge-er',
 }
 
 export default function DashboardPage() {
-  const [period, setPeriod] = useState('Maio 2026')
+  const [kpis, setKpis]       = useState<DashboardKPIs | null>(null)
+  const [clientes, setClientes] = useState<any[]>([])
+  const [projetos, setProjetos] = useState<any[]>([])
+  const [pipeline, setPipeline] = useState<any[]>([])
+  const [loading, setLoading]  = useState(true)
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true)
+      const sb = createClient()
+      const [kpisData, { data: cls }, { data: prj }, { data: pip }] = await Promise.all([
+        getDashboardKPIs(),
+        sb.from('clientes').select('*').order('created_at', { ascending: false }).limit(5),
+        sb.from('projetos').select('*').eq('status', 'em_andamento').limit(5),
+        sb.from('pipeline').select('*').order('created_at', { ascending: false }).limit(8),
+      ])
+      setKpis(kpisData)
+      setClientes(cls ?? [])
+      setProjetos(prj ?? [])
+      setPipeline(pip ?? [])
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  const kpiCards = kpis ? [
+    { label: 'MRR',                  val: fmt(kpis.mrr),            delta: `${kpis.clientesAtivos} ativos`,  up: true,  icon: '💰', color: 'var(--al)' },
+    { label: 'Clientes Ativos',      val: String(kpis.clientesAtivos), delta: `${kpis.totalClientes} total`, up: true,  icon: '🏢', color: 'var(--bl)' },
+    { label: 'Projetos em Andamento',val: String(kpis.projetosAtivos), delta: `${kpis.projetosConcluidos} concluídos`, up: true, icon: '📋', color: 'var(--pu)' },
+    { label: 'Campanhas Ativas',     val: String(kpis.campanhasAtivas), delta: 'em execução',                up: true,  icon: '🚀', color: 'var(--wr)' },
+    { label: 'Receita do Mês',       val: fmt(kpis.receitaMes),     delta: `Margem ${kpis.margemMes.toFixed(0)}%`, up: kpis.margemMes > 0, icon: '📊', color: 'var(--ok)' },
+    { label: 'Ticket Médio',         val: fmt(kpis.ticketMedio),    delta: `${kpis.propostasAbertas} propostas abertas`, up: true, icon: '🎯', color: 'var(--cy)' },
+  ] : []
+
+  const etapas = ['prospeccao','qualificacao','proposta','negociacao','fechado','perdido']
+  const funnelData = etapas.slice(0, 4).map(e => ({
+    label: { prospeccao: 'Prospecção', qualificacao: 'Qualificação', proposta: 'Em Proposta', negociacao: 'Negociação' }[e] ?? e,
+    val: pipeline.filter(l => l.etapa === e).length,
+    color: ['var(--bl)','var(--pu)','var(--wr)','var(--ok)'][etapas.indexOf(e)] ?? 'var(--gr)',
+  }))
+  const maxFunnel = Math.max(...funnelData.map(f => f.val), 1)
 
   return (
     <>
       <div className="topbar">
         <div>
           <span className="tb-title">Dashboard Executivo</span>
-          <span className="tb-sub">Visão geral da agência</span>
+          <span className="tb-sub">Visão geral em tempo real</span>
         </div>
-        <select className="inp" style={{ width: 130 }} value={period} onChange={e => setPeriod(e.target.value)}>
-          <option>Maio 2026</option>
-          <option>Abril 2026</option>
-          <option>Março 2026</option>
-        </select>
+        {loading && <span style={{ fontSize: 12, color: 'var(--gr3)' }}>⟳ Carregando…</span>}
       </div>
 
       <div className="content">
         {/* KPIs */}
         <div className="kpi-grid">
-          {kpis.map(k => (
-            <div key={k.label} className="kpi">
-              <div className="kpi-icon" style={{ background: `${k.color}22` }}>
-                <span style={{ fontSize: 16 }}>{k.icon}</span>
-              </div>
-              <div className="kpi-label">{k.label}</div>
-              <div className="kpi-val">{k.val}</div>
-              <div className={`kpi-delta ${k.up ? 'up' : 'dn'}`}>
-                {k.up ? '▲' : '▼'} {k.delta} vs. mês anterior
-              </div>
-            </div>
-          ))}
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="kpi" style={{ opacity: 0.4 }}>
+                  <div className="kpi-label">—</div>
+                  <div className="kpi-val">…</div>
+                </div>
+              ))
+            : kpiCards.map(k => (
+                <div key={k.label} className="kpi">
+                  <div className="kpi-icon" style={{ background: `${k.color}22` }}>
+                    <span style={{ fontSize: 16 }}>{k.icon}</span>
+                  </div>
+                  <div className="kpi-label">{k.label}</div>
+                  <div className="kpi-val">{k.val}</div>
+                  <div className={`kpi-delta ${k.up ? 'up' : 'dn'}`}>{k.delta}</div>
+                </div>
+              ))}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16 }}>
@@ -73,117 +91,154 @@ export default function DashboardPage() {
             <div className="sec-hd">
               <div>
                 <div className="sec-title">Clientes Recentes</div>
-                <div className="sec-sub">Últimas interações</div>
+                <div className="sec-sub">Últimos cadastrados</div>
               </div>
               <a href="/clientes" className="btn btn-ghost btn-sm">Ver todos</a>
             </div>
-            <table className="tbl">
-              <thead>
-                <tr>
-                  <th>Cliente</th>
-                  <th>Setor</th>
-                  <th>Valor Mensal</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentClients.map(c => (
-                  <tr key={c.name}>
-                    <td style={{ fontWeight: 600, color: 'var(--wh)' }}>{c.name}</td>
-                    <td style={{ color: 'var(--gr3)' }}>{c.sector}</td>
-                    <td style={{ fontFamily: 'var(--mono)', color: 'var(--al)' }}>{c.value}</td>
-                    <td><span className={`badge ${statusColor[c.status]}`}>{c.status}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {clientes.length === 0 && !loading ? (
+              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--gr3)', fontSize: 13 }}>
+                Nenhum cliente cadastrado ainda.<br/>
+                <a href="/clientes" style={{ color: 'var(--al)' }}>Cadastrar primeiro cliente →</a>
+              </div>
+            ) : (
+              <table className="tbl">
+                <thead>
+                  <tr><th>Cliente</th><th>Setor</th><th>Mensalidade</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  {clientes.map(c => (
+                    <tr key={c.id}>
+                      <td style={{ fontWeight: 600, color: 'var(--wh)' }}>{c.nome}</td>
+                      <td style={{ color: 'var(--gr3)' }}>{c.setor || '—'}</td>
+                      <td style={{ fontFamily: 'var(--mono)', color: 'var(--al)' }}>
+                        {c.mensalidade ? `R$ ${c.mensalidade.toLocaleString('pt-BR')}` : '—'}
+                      </td>
+                      <td><span className={`badge ${statusColor[c.status] ?? ''}`}>{c.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
 
-          {/* Atividades */}
+          {/* Projetos Ativos */}
           <div className="card">
             <div className="sec-hd">
-              <div className="sec-title">Atividades Recentes</div>
+              <div className="sec-title">Projetos em Andamento</div>
+              <a href="/projetos" className="btn btn-ghost btn-sm">Ver todos</a>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-              {activities.map((a, i) => (
-                <div key={i} className="stat-row" style={{ alignItems: 'flex-start', gap: 10 }}>
-                  <span style={{ fontSize: 16, marginTop: 1 }}>{actIcon[a.type]}</span>
-                  <div>
-                    <div style={{ fontSize: 11.5, color: 'var(--lgt)', lineHeight: 1.4 }}>{a.text}</div>
-                    <div style={{ fontSize: 9.5, color: 'var(--gr3)', marginTop: 2 }}>{a.time}</div>
+            {projetos.length === 0 && !loading ? (
+              <div style={{ textAlign: 'center', padding: '16px 0', color: 'var(--gr3)', fontSize: 12 }}>
+                Nenhum projeto ativo.<br/>
+                <a href="/projetos" style={{ color: 'var(--al)' }}>Criar projeto →</a>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {projetos.map(p => (
+                  <div key={p.id} className="stat-row" style={{ alignItems: 'flex-start', gap: 10 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--wh)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.titulo}</div>
+                      <div style={{ fontSize: 10, color: 'var(--gr3)', marginTop: 2 }}>{p.cliente_nome || '—'} · {p.responsavel || '—'}</div>
+                      <div className="progress-bar" style={{ marginTop: 6 }}>
+                        <div className="progress-fill" style={{ width: `${p.progresso}%` }} />
+                      </div>
+                    </div>
+                    <span style={{ fontSize: 10, color: 'var(--al)', fontFamily: 'var(--mono)', whiteSpace: 'nowrap' }}>{p.progresso}%</span>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Performance Row */}
+        {/* Funil + Financeiro + Pipeline */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginTop: 16 }}>
+          {/* Funil de Vendas */}
           <div className="card">
             <div className="sec-hd">
               <div className="sec-title">Funil de Vendas</div>
+              <a href="/pipeline" className="btn btn-ghost btn-sm">Pipeline</a>
             </div>
-            {[
-              { label: 'Leads', val: 342, pct: 100, color: 'var(--bl)' },
-              { label: 'Qualificados', val: 89, pct: 26, color: 'var(--pu)' },
-              { label: 'Em Proposta', val: 31, pct: 9, color: 'var(--wr)' },
-              { label: 'Fechados', val: 11, pct: 3, color: 'var(--ok)' },
-            ].map(r => (
+            {funnelData.map(r => (
               <div key={r.label} style={{ marginBottom: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
                   <span style={{ fontSize: 11 }}>{r.label}</span>
                   <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: r.color }}>{r.val}</span>
                 </div>
                 <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${r.pct}%`, background: r.color }} />
+                  <div className="progress-fill" style={{ width: `${maxFunnel > 0 ? (r.val / maxFunnel) * 100 : 0}%`, background: r.color }} />
                 </div>
               </div>
             ))}
+            {kpis && (
+              <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--bk4)', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 11, color: 'var(--gr3)' }}>Pipeline total</span>
+                <span style={{ fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--ok)' }}>{fmt(kpis.valorPipelineTotal)}</span>
+              </div>
+            )}
           </div>
 
+          {/* Resultado do Mês */}
           <div className="card">
             <div className="sec-hd">
-              <div className="sec-title">Receita por Canal</div>
+              <div className="sec-title">Resultado do Mês</div>
+              <a href="/financeiro" className="btn btn-ghost btn-sm">Financeiro</a>
             </div>
-            {[
-              { label: 'Gestão de Redes', pct: 38, val: 'R$ 32.110' },
-              { label: 'Tráfego Pago', pct: 28, val: 'R$ 23.660' },
-              { label: 'SEO / Orgânico', pct: 18, val: 'R$ 15.210' },
-              { label: 'Criação de Conteúdo', pct: 16, val: 'R$ 13.520' },
+            {kpis ? [
+              { label: 'Receita',  val: fmt(kpis.receitaMes),  color: 'var(--ok)' },
+              { label: 'Despesas', val: fmt(kpis.despesaMes),  color: 'var(--er)' },
+              { label: 'Lucro',    val: fmt(kpis.lucroMes),    color: kpis.lucroMes >= 0 ? 'var(--al)' : 'var(--er)' },
             ].map(r => (
-              <div key={r.label} style={{ marginBottom: 12 }}>
+              <div key={r.label} className="stat-row" style={{ marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: 'var(--gr3)' }}>{r.label}</span>
+                <span style={{ fontSize: 14, fontFamily: 'var(--mono)', fontWeight: 700, color: r.color }}>{r.val}</span>
+              </div>
+            )) : null}
+            {kpis && (
+              <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--bk4)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                  <span style={{ fontSize: 11 }}>{r.label}</span>
-                  <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: 'var(--al)' }}>{r.val}</span>
+                  <span style={{ fontSize: 11 }}>Margem</span>
+                  <span style={{ fontSize: 11, color: kpis.margemMes >= 30 ? 'var(--ok)' : kpis.margemMes >= 15 ? 'var(--wr)' : 'var(--er)' }}>
+                    {kpis.margemMes.toFixed(1)}%
+                  </span>
                 </div>
                 <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${r.pct}%` }} />
+                  <div className="progress-fill" style={{ width: `${Math.min(kpis.margemMes, 100)}%`, background: kpis.margemMes >= 30 ? 'var(--ok)' : kpis.margemMes >= 15 ? 'var(--wr)' : 'var(--er)' }} />
                 </div>
               </div>
-            ))}
+            )}
           </div>
 
+          {/* Saúde da Carteira */}
           <div className="card">
             <div className="sec-hd">
-              <div className="sec-title">Metas do Mês</div>
+              <div className="sec-title">Saúde da Carteira</div>
+              <a href="/clientes" className="btn btn-ghost btn-sm">Clientes</a>
             </div>
-            {[
-              { label: 'Receita', current: 84500, goal: 100000, pct: 85 },
-              { label: 'Novos Clientes', current: 3, goal: 5, pct: 60 },
-              { label: 'Propostas Enviadas', current: 11, goal: 15, pct: 73 },
-              { label: 'Projetos Entregues', current: 8, goal: 10, pct: 80 },
-            ].map(m => (
-              <div key={m.label} style={{ marginBottom: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                  <span style={{ fontSize: 11 }}>{m.label}</span>
-                  <span style={{ fontSize: 11, color: m.pct >= 80 ? 'var(--ok)' : m.pct >= 60 ? 'var(--wr)' : 'var(--er)' }}>{m.pct}%</span>
+            {kpis ? (() => {
+              const total = kpis.totalClientes || 1
+              const saude = [
+                { label: 'Ativos',     val: kpis.clientesAtivos, color: 'var(--ok)' },
+                { label: 'Onboarding', val: total - kpis.clientesAtivos, color: 'var(--al)' },
+              ]
+              return saude.map(s => (
+                <div key={s.label} style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                    <span style={{ fontSize: 11 }}>{s.label}</span>
+                    <span style={{ fontSize: 11, fontFamily: 'var(--mono)', color: s.color }}>{s.val}</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${(s.val / total) * 100}%`, background: s.color }} />
+                  </div>
                 </div>
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${m.pct}%`, background: m.pct >= 80 ? 'var(--ok)' : m.pct >= 60 ? 'var(--wr)' : 'var(--er)' }} />
-                </div>
+              ))
+            })() : null}
+            {kpis && (
+              <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--bk4)', display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 11, color: 'var(--gr3)' }}>Propostas em aberto</span>
+                <span style={{ fontSize: 12, fontFamily: 'var(--mono)', color: 'var(--wr)' }}>{kpis.propostasAbertas}</span>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>

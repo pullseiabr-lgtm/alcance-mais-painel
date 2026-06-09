@@ -1,147 +1,195 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { db, type PostCalendario } from '@/lib/db'
 
-type Post = {
-  id: number; titulo: string; cliente: string; canal: string; data: string;
-  hora: string; status: string; formato: string; legenda: string
+const CANAIS = ['Instagram','Facebook','TikTok','YouTube','LinkedIn','Twitter/X','WhatsApp','Blog','iFood']
+const FORMATOS = ['Imagem','Vídeo','Reels','Stories','Carrossel','Post','Live','Blog']
+const statusColor: Record<string,string> = {
+  em_criacao:'badge-bl', revisao:'badge-wr', aprovado:'badge-al', agendado:'badge-pu', publicado:'badge-ok'
+}
+const STATUS_LIST = ['em_criacao','revisao','aprovado','agendado','publicado']
+const STATUS_LABEL: Record<string,string> = {
+  em_criacao:'Em Criação', revisao:'Revisão', aprovado:'Aprovado', agendado:'Agendado', publicado:'Publicado'
 }
 
-const inicial: Post[] = [
-  { id: 1, titulo: 'Post Produto TechNova', cliente: 'TechNova Solutions', canal: 'Instagram', data: '2026-05-13', hora: '10:00', status: 'Aprovado', formato: 'Carrossel', legenda: 'Novidades do nosso produto! 🚀' },
-  { id: 2, titulo: 'Vídeo Construtora', cliente: 'Construtora Viva Mais', canal: 'Instagram', data: '2026-05-13', hora: '14:00', status: 'Agendado', formato: 'Reels', legenda: 'Nossa obra mais recente em SP' },
-  { id: 3, titulo: 'Story Promoção FitLife', cliente: 'Academia FitLife', canal: 'Instagram', data: '2026-05-14', hora: '09:00', status: 'Em Criação', formato: 'Story', legenda: 'Black Friday na academia!' },
-  { id: 4, titulo: 'Post LinkedIn TechNova', cliente: 'TechNova Solutions', canal: 'LinkedIn', data: '2026-05-14', hora: '12:00', status: 'Aprovado', formato: 'Imagem', legenda: 'Case de sucesso com nossos clientes' },
-  { id: 5, titulo: 'Foto Prato Sabor & Arte', cliente: 'Sabor & Arte Restaurante', canal: 'Instagram', data: '2026-05-15', hora: '11:00', status: 'Em Criação', formato: 'Imagem', legenda: 'Especial do dia! Venha provar 😋' },
-  { id: 6, titulo: 'Dica Dr. Marcos', cliente: 'Dr. Marcos Cardiologia', canal: 'Instagram', data: '2026-05-15', hora: '16:00', status: 'Revisão', formato: 'Carrossel', legenda: '5 dicas para sua saúde cardíaca' },
-  { id: 7, titulo: 'Post Imóvel Prime', cliente: 'Imobiliária Prime', canal: 'Facebook', data: '2026-05-16', hora: '10:00', status: 'Agendado', formato: 'Imagem', legenda: 'Apartamento novo em Moema!' },
-  { id: 8, titulo: 'Reels OdontoVida', cliente: 'Clínica OdontoVida', canal: 'Instagram', data: '2026-05-17', hora: '13:00', status: 'Aprovado', formato: 'Reels', legenda: 'Antes e depois do seu sorriso ✨' },
-]
-
-const canalColor: Record<string, string> = { Instagram: 'badge-pk', LinkedIn: 'badge-bl', Facebook: 'badge-pu', YouTube: 'badge-er', TikTok: 'badge-wr' }
-const statusColor: Record<string, string> = { Aprovado: 'badge-ok', Agendado: 'badge-al', 'Em Criação': 'badge-wr', Revisão: 'badge-bl', Publicado: 'badge-gr' }
-
-type BadgeClass = string
-const empty: Omit<Post, 'id'> = { titulo: '', cliente: '', canal: 'Instagram', data: '', hora: '10:00', status: 'Em Criação', formato: 'Imagem', legenda: '' }
+const EMPTY: Omit<PostCalendario,'id'|'created_at'> = {
+  titulo:'', cliente_id:null, cliente_nome:'', canal:'Instagram', data: new Date().toISOString().slice(0,10),
+  hora:'10:00', status:'em_criacao', formato:'Imagem', legenda:''
+}
 
 export default function CalendarioPage() {
-  const [posts, setPosts] = useState(inicial)
-  const [modal, setModal] = useState(false)
-  const [form, setForm] = useState<Omit<Post, 'id'>>(empty)
-  const [editing, setEditing] = useState<number | null>(null)
-  const [filter, setFilter] = useState('Todos')
+  const [posts, setPosts]       = useState<PostCalendario[]>([])
+  const [clientes, setClientes] = useState<{id:string,nome:string}[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [modal, setModal]       = useState(false)
+  const [form, setForm]         = useState<Omit<PostCalendario,'id'|'created_at'>>(EMPTY)
+  const [editing, setEditing]   = useState<string|null>(null)
+  const [saving, setSaving]     = useState(false)
+  const [filter, setFilter]     = useState('todos')
 
-  const dias = Array.from(new Set(posts.map(p => p.data))).sort()
-  const filtered = posts.filter(p => filter === 'Todos' || p.status === filter)
+  async function load() {
+    setLoading(true)
+    const [{ data: p }, { data: cls }] = await Promise.all([
+      db.calendario.listar(),
+      db.clientes.listar(),
+    ])
+    setPosts(p ?? [])
+    setClientes((cls??[]).map(c=>({id:c.id,nome:c.nome})))
+    setLoading(false)
+  }
+  useEffect(() => { load() }, [])
 
-  function save() {
+  const filtered = posts.filter(p => filter==='todos' || p.status===filter)
+
+  // Agrupa por data
+  const porData = filtered.reduce<Record<string, PostCalendario[]>>((acc, p) => {
+    acc[p.data] = acc[p.data] ?? []
+    acc[p.data].push(p)
+    return acc
+  }, {})
+  const datas = Object.keys(porData).sort()
+
+  async function save() {
     if (!form.titulo) return
-    if (editing !== null) {
-      setPosts(ps => ps.map(p => p.id === editing ? { ...form, id: editing } : p))
-    } else {
-      setPosts(ps => [...ps, { ...form, id: Date.now() }])
-    }
-    setModal(false); setForm(empty); setEditing(null)
+    setSaving(true)
+    if (editing) await db.calendario.atualizar(editing, form)
+    else await db.calendario.criar(form)
+    setSaving(false); setModal(false); setForm(EMPTY); setEditing(null)
+    load()
   }
 
-  function edit(p: Post) {
-    const { id, ...rest } = p; setForm(rest); setEditing(id); setModal(true)
+  async function remove(id: string) {
+    if (!confirm('Remover post?')) return
+    await db.calendario.deletar(id); load()
   }
 
-  const diasUnicos = Array.from(new Set(filtered.map(p => p.data))).sort()
+  function openEdit(p: PostCalendario) {
+    const { id, created_at, ...rest } = p; setForm(rest); setEditing(id); setModal(true)
+  }
 
   return (
     <>
       <div className="topbar">
         <div>
           <span className="tb-title">Calendário de Conteúdo</span>
-          <span className="tb-sub">{posts.length} publicações programadas</span>
+          <span className="tb-sub">{posts.length} posts · {posts.filter(p=>p.status==='publicado').length} publicados</span>
         </div>
-        <button className="btn btn-al" onClick={() => { setForm(empty); setEditing(null); setModal(true) }}>
-          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Nova Publicação
-        </button>
+        <button className="btn btn-primary" onClick={()=>{setForm(EMPTY);setEditing(null);setModal(true)}}>+ Novo Post</button>
       </div>
 
       <div className="content">
-        <div className="tabs">
-          {['Todos','Em Criação','Revisão','Aprovado','Agendado','Publicado'].map(f => (
-            <button key={f} className={`tab${filter === f ? ' act' : ''}`} onClick={() => setFilter(f)}>{f}</button>
+        {/* Filtros status */}
+        <div style={{ display:'flex', gap:8, marginBottom:16, flexWrap:'wrap' }}>
+          <button className={`btn btn-sm ${filter==='todos'?'btn-primary':'btn-ghost'}`} onClick={()=>setFilter('todos')}>Todos</button>
+          {STATUS_LIST.map(s=>(
+            <button key={s} className={`btn btn-sm ${filter===s?'btn-primary':'btn-ghost'}`} onClick={()=>setFilter(s)}>{STATUS_LABEL[s]}</button>
           ))}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          {diasUnicos.map(dia => {
-            const dayPosts = filtered.filter(p => p.data === dia)
-            return (
-              <div key={dia}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--gr3)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ background: 'var(--bk4)', padding: '2px 10px', borderRadius: 20 }}>
-                    {new Date(dia + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+        {loading ? (
+          <div style={{ textAlign:'center', padding:'48px 0', color:'var(--gr3)' }}>⟳ Carregando calendário…</div>
+        ) : datas.length===0 ? (
+          <div style={{ textAlign:'center', padding:'48px 0', color:'var(--gr3)' }}>
+            Nenhum post encontrado.<br/>
+            <button className="btn btn-primary btn-sm" style={{ marginTop:12 }} onClick={()=>{setForm(EMPTY);setEditing(null);setModal(true)}}>+ Criar primeiro post</button>
+          </div>
+        ) : (
+          <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+            {datas.map(data=>(
+              <div key={data}>
+                <div style={{ fontSize:11, fontWeight:700, color:'var(--al)', marginBottom:10, display:'flex', alignItems:'center', gap:8 }}>
+                  <span style={{ background:'var(--al)22', padding:'3px 10px', borderRadius:6, fontFamily:'var(--mono)' }}>
+                    {new Date(data+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})}
                   </span>
-                  <span style={{ color: 'var(--al)' }}>{dayPosts.length} post(s)</span>
+                  <span style={{ color:'var(--gr3)', fontWeight:400 }}>{porData[data].length} post{porData[data].length!==1?'s':''}</span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 10 }}>
-                  {dayPosts.map(p => (
-                    <div key={p.id} className="card" style={{ cursor: 'pointer', borderLeft: `3px solid ${canalColor[p.canal]?.replace('badge-', '') === 'pk' ? 'var(--pk)' : 'var(--al)'}` }} onClick={() => edit(p)}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                        <div style={{ fontWeight: 700, color: 'var(--wh)', fontSize: 12 }}>{p.titulo}</div>
-                        <span className={`badge ${statusColor[p.status]}`}>{p.status}</span>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(280px, 1fr))', gap:12 }}>
+                  {porData[data].map(p=>(
+                    <div key={p.id} className="card" style={{ padding:'14px 16px', cursor:'pointer' }} onClick={()=>openEdit(p)}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:8 }}>
+                        <div>
+                          <div style={{ fontWeight:600, fontSize:13, color:'var(--wh)', marginBottom:2 }}>{p.titulo}</div>
+                          <div style={{ fontSize:11, color:'var(--gr3)' }}>{p.cliente_nome||'Sem cliente'}</div>
+                        </div>
+                        <button className="btn btn-ghost btn-sm" style={{ color:'var(--er)', minWidth:28 }}
+                          onClick={ev=>{ev.stopPropagation();remove(p.id)}}>🗑</button>
                       </div>
-                      <div style={{ fontSize: 10, color: 'var(--gr3)', marginBottom: 6 }}>{p.cliente}</div>
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        <span className={`badge ${canalColor[p.canal] ?? 'badge-gr'}`}>{p.canal}</span>
-                        <span className="badge badge-gr">{p.formato}</span>
-                        <span style={{ marginLeft: 'auto', fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--gr3)' }}>⏰ {p.hora}</span>
+                      <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                        <span className="badge">{p.canal}</span>
+                        <span className="badge">{p.formato}</span>
+                        <span className="badge" style={{ fontFamily:'var(--mono)' }}>{p.hora}</span>
+                        <span className={`badge ${statusColor[p.status]??''}`}>{STATUS_LABEL[p.status]}</span>
                       </div>
-                      {p.legenda && <div style={{ fontSize: 10, color: 'var(--gr3)', marginTop: 8, fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>"{p.legenda}"</div>}
+                      {p.legenda && (
+                        <div style={{ marginTop:8, fontSize:11, color:'var(--gr3)', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>
+                          {p.legenda}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               </div>
-            )
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {modal && (
-        <div className="modal-overlay" onClick={() => setModal(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-title">{editing ? 'Editar Publicação' : 'Nova Publicação'}</div>
-            <div className="modal-grid">
-              <div className="field" style={{ gridColumn: '1/-1' }}><label>Título</label>
-                <input className="inp" value={form.titulo} onChange={e => setForm({ ...form, titulo: e.target.value })} />
+        <div className="modal-overlay" onClick={e=>{if(e.target===e.currentTarget){setModal(false);setForm(EMPTY);setEditing(null)}}}>
+          <div className="modal" style={{ maxWidth:520 }}>
+            <div className="modal-hd">
+              <span>{editing?'Editar Post':'Novo Post'}</span>
+              <button className="btn btn-ghost btn-sm" onClick={()=>{setModal(false);setForm(EMPTY);setEditing(null)}}>✕</button>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+              <div style={{ gridColumn:'1/-1' }}>
+                <label className="lbl">Título *</label>
+                <input className="inp" value={form.titulo} onChange={e=>setForm(f=>({...f,titulo:e.target.value}))} placeholder="Título do post"/>
               </div>
-              <div className="field"><label>Cliente</label>
-                <input className="inp" value={form.cliente} onChange={e => setForm({ ...form, cliente: e.target.value })} />
-              </div>
-              <div className="field"><label>Canal</label>
-                <select className="inp" value={form.canal} onChange={e => setForm({ ...form, canal: e.target.value })}>
-                  {['Instagram','LinkedIn','Facebook','YouTube','TikTok','Twitter'].map(c => <option key={c}>{c}</option>)}
+              <div>
+                <label className="lbl">Cliente</label>
+                <select className="inp" value={form.cliente_id??''} onChange={e=>{
+                  const cl=clientes.find(c=>c.id===e.target.value)
+                  setForm(f=>({...f,cliente_id:e.target.value||null,cliente_nome:cl?.nome??''}))
+                }}>
+                  <option value="">Nenhum</option>
+                  {clientes.map(c=><option key={c.id} value={c.id}>{c.nome}</option>)}
                 </select>
               </div>
-              <div className="field"><label>Formato</label>
-                <select className="inp" value={form.formato} onChange={e => setForm({ ...form, formato: e.target.value })}>
-                  {['Imagem','Carrossel','Reels','Story','Vídeo','Texto'].map(f => <option key={f}>{f}</option>)}
+              <div>
+                <label className="lbl">Canal</label>
+                <select className="inp" value={form.canal} onChange={e=>setForm(f=>({...f,canal:e.target.value}))}>
+                  {CANAIS.map(c=><option key={c}>{c}</option>)}
                 </select>
               </div>
-              <div className="field"><label>Status</label>
-                <select className="inp" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-                  {['Em Criação','Revisão','Aprovado','Agendado','Publicado'].map(s => <option key={s}>{s}</option>)}
+              <div>
+                <label className="lbl">Data</label>
+                <input className="inp" type="date" value={form.data} onChange={e=>setForm(f=>({...f,data:e.target.value}))}/>
+              </div>
+              <div>
+                <label className="lbl">Hora</label>
+                <input className="inp" type="time" value={form.hora} onChange={e=>setForm(f=>({...f,hora:e.target.value}))}/>
+              </div>
+              <div>
+                <label className="lbl">Formato</label>
+                <select className="inp" value={form.formato} onChange={e=>setForm(f=>({...f,formato:e.target.value}))}>
+                  {FORMATOS.map(f=><option key={f}>{f}</option>)}
                 </select>
               </div>
-              <div className="field"><label>Data</label>
-                <input className="inp" type="date" value={form.data} onChange={e => setForm({ ...form, data: e.target.value })} />
+              <div>
+                <label className="lbl">Status</label>
+                <select className="inp" value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value as any}))}>
+                  {STATUS_LIST.map(s=><option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+                </select>
               </div>
-              <div className="field"><label>Hora</label>
-                <input className="inp" type="time" value={form.hora} onChange={e => setForm({ ...form, hora: e.target.value })} />
-              </div>
-              <div className="field" style={{ gridColumn: '1/-1' }}><label>Legenda</label>
-                <textarea className="inp" rows={3} value={form.legenda} onChange={e => setForm({ ...form, legenda: e.target.value })} />
+              <div style={{ gridColumn:'1/-1' }}>
+                <label className="lbl">Legenda / Descrição</label>
+                <textarea className="inp" rows={3} value={form.legenda} onChange={e=>setForm(f=>({...f,legenda:e.target.value}))} placeholder="Texto do post, legenda, descrição…" style={{ resize:'vertical' }}/>
               </div>
             </div>
-            <div className="modal-foot">
-              <button className="btn btn-ghost" onClick={() => setModal(false)}>Cancelar</button>
-              <button className="btn btn-al" onClick={save}>Salvar</button>
+            <div style={{ display:'flex', gap:8, justifyContent:'flex-end', marginTop:20 }}>
+              <button className="btn btn-ghost" onClick={()=>{setModal(false);setForm(EMPTY);setEditing(null)}}>Cancelar</button>
+              <button className="btn btn-primary" onClick={save} disabled={saving||!form.titulo}>{saving?'Salvando…':editing?'Salvar':'Adicionar Post'}</button>
             </div>
           </div>
         </div>

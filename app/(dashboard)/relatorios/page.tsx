@@ -1,142 +1,158 @@
 'use client'
-import { useState } from 'react'
-import { clientesIniciais } from '@/lib/types/cliente'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
-function waRelatorio(clienteNome: string, periodo: string): string {
-  const cliente = clientesIniciais.find(c => c.nome === clienteNome || c.nomeFantasia === clienteNome)
-  const phone = cliente?.whatsapp || cliente?.telefone
-  if (!phone) return ''
-  const digits = phone.replace(/\D/g, '')
-  const num = digits.startsWith('55') ? digits : `55${digits}`
-  const texto = `Olá! Segue o relatório de performance ${periodo} da Alcance+. Qualquer dúvida, estou à disposição!`
-  return `https://wa.me/${num}?text=${encodeURIComponent(texto)}`
+interface RelCliente {
+  id: string
+  nome: string
+  telefone: string
+  campanhas: number
+  investimento: number
+  impressoes: number
+  cliques: number
+  conversoes: number
+  ctr: string
+  cpc: string
+  roas: string
 }
 
-const clientes = ['Todos','TechNova Solutions','Construtora Viva Mais','Dr. Marcos Cardiologia','Sabor & Arte Restaurante','Imobiliária Prime','Clínica OdontoVida']
-const periodos = ['Maio 2026','Abril 2026','Março 2026','Fevereiro 2026','Último Trimestre','Últimos 6 meses']
-
-const metricas = [
-  { canal: 'Google Ads', impressoes: 142900, cliques: 4240, ctr: '2.97%', conv: 109, cpa: 'R$ 78', gasto: 'R$ 8.502' },
-  { canal: 'Meta Ads', impressoes: 89200, cliques: 2100, ctr: '2.35%', conv: 43, cpa: 'R$ 128', gasto: 'R$ 5.504' },
-  { canal: 'Instagram Orgânico', impressoes: 52000, cliques: 1340, ctr: '2.58%', conv: 18, cpa: '—', gasto: '—' },
-  { canal: 'SEO / Orgânico', impressoes: 0, cliques: 0, ctr: '—', conv: 156, cpa: 'R$ 16', gasto: 'R$ 2.500' },
-  { canal: 'YouTube Ads', impressoes: 67000, cliques: 1890, ctr: '2.82%', conv: 31, cpa: 'R$ 65', gasto: 'R$ 2.015' },
-]
-
-const relatoriosMes = [
-  { cliente: 'TechNova Solutions', periodo: 'Maio 2026', status: 'Enviado', data: '2026-05-10', tipo: 'Mensal' },
-  { cliente: 'Construtora Viva Mais', periodo: 'Maio 2026', status: 'Pendente', data: '—', tipo: 'Mensal' },
-  { cliente: 'Dr. Marcos Cardiologia', periodo: 'Maio 2026', status: 'Em Preparação', data: '—', tipo: 'Mensal' },
-  { cliente: 'Imobiliária Prime', periodo: 'Maio 2026', status: 'Enviado', data: '2026-05-08', tipo: 'Mensal' },
-  { cliente: 'Clínica OdontoVida', periodo: 'Maio 2026', status: 'Pendente', data: '—', tipo: 'Mensal' },
-  { cliente: 'TechNova Solutions', periodo: 'Q1 2026', status: 'Enviado', data: '2026-04-02', tipo: 'Trimestral' },
-]
-
-const statusColor: Record<string, string> = { Enviado: 'badge-ok', Pendente: 'badge-wr', 'Em Preparação': 'badge-al' }
-
 export default function RelatoriosPage() {
-  const [clienteFilter, setClienteFilter] = useState('Todos')
-  const [periodo, setPeriodo] = useState('Maio 2026')
-  const [tab, setTab] = useState<'metricas' | 'relatorios'>('metricas')
+  const [clientes, setClientes] = useState<RelCliente[]>([])
+  const [loading, setLoading]   = useState(true)
+  const [periodo, setPeriodo]   = useState('30')
+
+  useEffect(() => { loadRelatorio() }, [periodo])
+
+  async function loadRelatorio() {
+    setLoading(true)
+    const sb = createClient()
+
+    const [{ data: cls }, { data: camp }, { data: metricas }] = await Promise.all([
+      sb.from('clientes').select('id,nome,telefone').eq('status','ativo'),
+      sb.from('campanhas').select('id,cliente_id,gasto,impressoes,cliques,conversoes').eq('status','ativa'),
+      sb.from('metricas_diarias').select('cliente_id,gasto,impressoes,cliques,conversoes')
+        .gte('data', new Date(Date.now() - +periodo * 86400000).toISOString().slice(0,10)),
+    ])
+
+    const resultado: RelCliente[] = (cls ?? []).map(c => {
+      const campCliente = (camp ?? []).filter(cam => cam.cliente_id === c.id)
+      const metCliente  = (metricas ?? []).filter(m => m.cliente_id === c.id)
+
+      // Usa metricas_diarias se disponível, senão usa campanhas
+      const fonte = metCliente.length > 0 ? metCliente : campCliente
+      const investimento = fonte.reduce((s, r) => s + (r.gasto || 0), 0)
+      const impressoes   = fonte.reduce((s, r) => s + (r.impressoes || 0), 0)
+      const cliques      = fonte.reduce((s, r) => s + (r.cliques || 0), 0)
+      const conversoes   = fonte.reduce((s, r) => s + (r.conversoes || 0), 0)
+      const ctr  = impressoes > 0 ? ((cliques/impressoes)*100).toFixed(2) : '0.00'
+      const cpc  = cliques > 0 ? (investimento/cliques).toFixed(2) : '0.00'
+      const roas = investimento > 0 ? (conversoes * 150 / investimento).toFixed(1) : '0.0'
+
+      return { id:c.id, nome:c.nome, telefone:c.telefone||'', campanhas:campCliente.length, investimento, impressoes, cliques, conversoes, ctr, cpc, roas }
+    })
+
+    setClientes(resultado)
+    setLoading(false)
+  }
+
+  function waLink(cliente: RelCliente) {
+    const phone = cliente.telefone.replace(/\D/g,'')
+    const num = phone.startsWith('55') ? phone : `55${phone}`
+    const periodo_label = {7:'7 dias',30:'30 dias',60:'60 dias',90:'90 dias'}[+periodo] ?? `${periodo} dias`
+    const msg = encodeURIComponent(
+      `📊 *Relatório de Marketing — ${periodo_label}*\n\n` +
+      `Cliente: *${cliente.nome}*\n\n` +
+      `📢 Campanhas ativas: ${cliente.campanhas}\n` +
+      `💰 Investimento: R$ ${cliente.investimento.toLocaleString('pt-BR')}\n` +
+      `👁 Impressões: ${cliente.impressoes.toLocaleString('pt-BR')}\n` +
+      `🖱 Cliques: ${cliente.cliques.toLocaleString('pt-BR')}\n` +
+      `📈 CTR: ${cliente.ctr}%\n` +
+      `💲 CPC: R$ ${cliente.cpc}\n` +
+      `🎯 Conversões: ${cliente.conversoes}\n` +
+      `📊 ROAS estimado: ${cliente.roas}x\n\n` +
+      `Relatório gerado pela Alcance+ • alcanceplus.com.br`
+    )
+    return `https://wa.me/${num}?text=${msg}`
+  }
+
+  const totalInvestimento = clientes.reduce((s,c)=>s+c.investimento,0)
+  const totalConversoes   = clientes.reduce((s,c)=>s+c.conversoes,0)
 
   return (
     <>
       <div className="topbar">
         <div>
-          <span className="tb-title">Relatórios & Analytics</span>
-          <span className="tb-sub">Performance consolidada</span>
+          <span className="tb-title">Relatórios</span>
+          <span className="tb-sub">{clientes.length} clientes · R$ {totalInvestimento.toLocaleString('pt-BR')} investidos</span>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <select className="inp" style={{ width: 160 }} value={clienteFilter} onChange={e => setClienteFilter(e.target.value)}>
-            {clientes.map(c => <option key={c}>{c}</option>)}
-          </select>
-          <select className="inp" style={{ width: 150 }} value={periodo} onChange={e => setPeriodo(e.target.value)}>
-            {periodos.map(p => <option key={p}>{p}</option>)}
-          </select>
-          <button className="btn btn-al">
-            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Exportar PDF
-          </button>
-        </div>
+        <select className="inp" style={{ width:140 }} value={periodo} onChange={e=>setPeriodo(e.target.value)}>
+          <option value="7">Últimos 7 dias</option>
+          <option value="30">Últimos 30 dias</option>
+          <option value="60">Últimos 60 dias</option>
+          <option value="90">Últimos 90 dias</option>
+        </select>
       </div>
 
       <div className="content">
-        {/* KPIs consolidados */}
-        <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(5,1fr)' }}>
+        {/* KPIs rápidos */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:16, marginBottom:20 }}>
           {[
-            { label: 'Total Impressões', val: '351.100', color: 'var(--bl)' },
-            { label: 'Total Cliques', val: '9.570', color: 'var(--pu)' },
-            { label: 'CTR Médio', val: '2.72%', color: 'var(--al)' },
-            { label: 'Total Conversões', val: '357', color: 'var(--ok)' },
-            { label: 'CPA Médio', val: 'R$ 52', color: 'var(--wr)' },
-          ].map(k => (
-            <div key={k.label} className="kpi">
-              <div className="kpi-label">{k.label}</div>
-              <div className="kpi-val" style={{ fontSize: 22, color: k.color }}>{k.val}</div>
+            { label:'Clientes com Dados',    val: String(clientes.filter(c=>c.campanhas>0||c.impressoes>0).length), color:'var(--al)' },
+            { label:'Total Investido',        val:`R$ ${totalInvestimento.toLocaleString('pt-BR')}`,                 color:'var(--ok)' },
+            { label:'Total Conversões',       val: String(totalConversoes),                                           color:'var(--pu)' },
+            { label:'Relatórios Disponíveis', val: String(clientes.length),                                           color:'var(--bl)' },
+          ].map(k=>(
+            <div key={k.label} className="card" style={{ padding:'16px 18px' }}>
+              <div style={{ fontSize:11, color:'var(--gr3)', marginBottom:6 }}>{k.label}</div>
+              <div style={{ fontSize:22, fontWeight:700, fontFamily:'var(--mono)', color:k.color }}>{k.val}</div>
             </div>
           ))}
         </div>
 
-        <div className="tabs">
-          <button className={`tab${tab === 'metricas' ? ' act' : ''}`} onClick={() => setTab('metricas')}>Métricas por Canal</button>
-          <button className={`tab${tab === 'relatorios' ? ' act' : ''}`} onClick={() => setTab('relatorios')}>Relatórios Enviados</button>
-        </div>
-
-        {tab === 'metricas' ? (
-          <div className="card">
-            <table className="tbl">
-              <thead>
-                <tr><th>Canal</th><th>Impressões</th><th>Cliques</th><th>CTR</th><th>Conversões</th><th>CPA</th><th>Investimento</th></tr>
-              </thead>
-              <tbody>
-                {metricas.map(m => (
-                  <tr key={m.canal}>
-                    <td style={{ fontWeight: 600, color: 'var(--wh)' }}>{m.canal}</td>
-                    <td style={{ fontFamily: 'var(--mono)' }}>{m.impressoes.toLocaleString('pt-BR')}</td>
-                    <td style={{ fontFamily: 'var(--mono)' }}>{m.cliques.toLocaleString('pt-BR')}</td>
-                    <td style={{ fontFamily: 'var(--mono)', color: 'var(--al)' }}>{m.ctr}</td>
-                    <td style={{ fontFamily: 'var(--mono)', fontWeight: 700, color: 'var(--ok)' }}>{m.conv}</td>
-                    <td style={{ fontFamily: 'var(--mono)' }}>{m.cpa}</td>
-                    <td style={{ fontFamily: 'var(--mono)', color: 'var(--er)' }}>{m.gasto}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {loading ? (
+          <div style={{ textAlign:'center', padding:'48px 0', color:'var(--gr3)' }}>⟳ Carregando relatórios…</div>
+        ) : clientes.length===0 ? (
+          <div style={{ textAlign:'center', padding:'48px 0', color:'var(--gr3)' }}>
+            Nenhum cliente ativo encontrado.<br/>
+            <a href="/clientes" style={{ color:'var(--al)', fontSize:13 }}>Cadastrar clientes →</a>
           </div>
         ) : (
-          <div className="card">
+          <div className="card" style={{ padding:0 }}>
             <table className="tbl">
               <thead>
-                <tr><th>Cliente</th><th>Período</th><th>Tipo</th><th>Data Envio</th><th>Status</th><th>Ações</th></tr>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Campanhas</th>
+                  <th>Investimento</th>
+                  <th>Impressões</th>
+                  <th>Cliques</th>
+                  <th>CTR</th>
+                  <th>CPC</th>
+                  <th>Conv.</th>
+                  <th>ROAS</th>
+                  <th>Enviar</th>
+                </tr>
               </thead>
               <tbody>
-                {relatoriosMes.map((r, i) => (
-                  <tr key={i}>
-                    <td style={{ fontWeight: 600, color: 'var(--wh)' }}>{r.cliente}</td>
-                    <td style={{ fontFamily: 'var(--mono)', fontSize: 11 }}>{r.periodo}</td>
-                    <td><span className="badge badge-gr">{r.tipo}</span></td>
-                    <td style={{ fontFamily: 'var(--mono)', fontSize: 11 }}>{r.data}</td>
-                    <td><span className={`badge ${statusColor[r.status]}`}>{r.status}</span></td>
+                {clientes.map(c => (
+                  <tr key={c.id}>
+                    <td style={{ fontWeight:600, color:'var(--wh)' }}>{c.nome}</td>
+                    <td style={{ fontFamily:'var(--mono)', textAlign:'center' }}>{c.campanhas}</td>
+                    <td style={{ fontFamily:'var(--mono)', color:'var(--al)' }}>R$ {c.investimento.toLocaleString('pt-BR')}</td>
+                    <td style={{ fontFamily:'var(--mono)' }}>{c.impressoes.toLocaleString('pt-BR')}</td>
+                    <td style={{ fontFamily:'var(--mono)' }}>{c.cliques.toLocaleString('pt-BR')}</td>
+                    <td style={{ fontFamily:'var(--mono)', color:'var(--bl)' }}>{c.ctr}%</td>
+                    <td style={{ fontFamily:'var(--mono)' }}>R$ {c.cpc}</td>
+                    <td style={{ fontFamily:'var(--mono)', color:'var(--ok)' }}>{c.conversoes}</td>
+                    <td style={{ fontFamily:'var(--mono)', color:+c.roas>=3?'var(--ok)':+c.roas>=1?'var(--wr)':'var(--er)', fontWeight:700 }}>{c.roas}x</td>
                     <td>
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        <button className="btn btn-ghost btn-sm">Ver</button>
-                        {r.status !== 'Enviado' && <button className="btn btn-al btn-sm">Enviar</button>}
-                        {(() => {
-                          const link = waRelatorio(r.cliente, r.periodo)
-                          return link ? (
-                            <a
-                              href={link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn btn-ghost btn-sm"
-                              style={{ background: '#25D36618', borderColor: '#25D36644', color: '#25D366', textDecoration: 'none' }}
-                              title="Enviar por WhatsApp"
-                            >
-                              WPP
-                            </a>
-                          ) : null
-                        })()}
-                      </div>
+                      {c.telefone ? (
+                        <a href={waLink(c)} target="_blank" rel="noreferrer">
+                          <button className="btn btn-ghost btn-sm" style={{ color:'#25D366' }}>📱 WhatsApp</button>
+                        </a>
+                      ) : (
+                        <span style={{ fontSize:11, color:'var(--gr3)' }}>Sem telefone</span>
+                      )}
                     </td>
                   </tr>
                 ))}
