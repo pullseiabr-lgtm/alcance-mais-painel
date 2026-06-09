@@ -175,6 +175,21 @@ export interface DashboardKPIs {
   valorPipelineTotal: number
 }
 
+export interface BrandKit {
+  id: string
+  cliente_id: string | null
+  nome: string
+  logo_url: string
+  cor_primaria: string
+  cor_secundaria: string
+  cor_acento: string
+  fontes: string[]
+  tagline: string
+  segmento: string
+  site: string
+  created_at: string
+}
+
 export async function getDashboardKPIs(): Promise<DashboardKPIs> {
   const sb = createClient()
   const now = new Date()
@@ -286,5 +301,23 @@ export const db = {
     criar:    (data: Omit<Contrato, 'id' | 'created_at'>) => createClient().from('contratos').insert(data).select().single(),
     atualizar:(id: string, data: Partial<Contrato>) => createClient().from('contratos').update(data).eq('id', id).select().single(),
     deletar:  (id: string) => createClient().from('contratos').delete().eq('id', id),
+  },
+  brandKits: {
+    listar:   () => createClient().from('brand_kits').select('*').order('created_at', { ascending: false }),
+    criar:    (data: Omit<BrandKit, 'id' | 'created_at'>) => createClient().from('brand_kits').insert(data).select().single(),
+    atualizar:(id: string, data: Partial<BrandKit>) => createClient().from('brand_kits').update(data).eq('id', id).select().single(),
+    deletar:  (id: string) => createClient().from('brand_kits').delete().eq('id', id),
+  },
+  briefings: {
+    listar:   () => createClient().from('briefings').select('*').order('created_at', { ascending: false }),
+    criar:    (data: any) => createClient().from('briefings').insert(data).select().single(),
+    atualizar:(id: string, data: any) => createClient().from('briefings').update(data).eq('id', id).select().single(),
+    deletar:  (id: string) => createClient().from('briefings').delete().eq('id', id),
+  },
+  aprovacoes: {
+    listar:   () => createClient().from('aprovacoes_pecas').select('*').order('created_at', { ascending: false }),
+    criar:    (data: any) => createClient().from('aprovacoes_pecas').insert(data).select().single(),
+    atualizar:(id: string, data: any) => createClient().from('aprovacoes_pecas').update(data).eq('id', id).select().single(),
+    deletar:  (id: string) => createClient().from('aprovacoes_pecas').delete().eq('id', id),
   },
 }
