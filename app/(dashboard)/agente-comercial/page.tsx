@@ -37,9 +37,9 @@ export default function AgenteComercialPage() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-700 rounded-xl flex items-center justify-center text-white text-lg font-bold">A</div>
+        <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-700 rounded-xl flex items-center justify-center text-white text-lg font-bold">E</div>
         <div className="flex-1">
-          <h1 className="font-bold text-gray-900">Aline · Consultora Estratégica</h1>
+          <h1 className="font-bold text-gray-900">Eduarda · Consultora Estratégica</h1>
           <p className="text-xs text-gray-500">Porta de entrada Alcance+ · diagnóstico, proposta e direcionamento — registra leads no CRM</p>
         </div>
         <button onClick={() => setMsgs([])} className="text-xs text-gray-400 hover:text-gray-600">🗑 Limpar</button>
@@ -52,13 +52,13 @@ export default function AgenteComercialPage() {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {msgs.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center gap-3 pb-20">
-            <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-700 rounded-3xl flex items-center justify-center text-white text-3xl">A</div>
-            <p className="text-gray-500 text-sm max-w-xs">Sou a <b>Aline</b>, consultora estratégica da Alcance+. Simule um cliente chegando pelo WhatsApp — eu diagnostico, gero proposta, direciono e crio o lead no CRM.</p>
+            <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-700 rounded-3xl flex items-center justify-center text-white text-3xl">E</div>
+            <p className="text-gray-500 text-sm max-w-xs">Sou a <b>Eduarda</b>, consultora estratégica da Alcance+. Simule um cliente chegando pelo WhatsApp — eu diagnostico, gero proposta, direciono e crio o lead no CRM.</p>
           </div>
         )}
         {msgs.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}>
-            {m.role === 'assistant' && <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-700 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 mt-1">A</div>}
+            {m.role === 'assistant' && <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-700 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0 mt-1">E</div>}
             <div className="max-w-[78%] flex flex-col gap-0.5">
               <div className={`px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed shadow-sm ${m.role === 'user' ? 'bg-teal-600 text-white rounded-br-sm' : 'bg-white text-gray-800 border border-gray-100 rounded-bl-sm'}`}>{m.content}</div>
               {m.tools && m.tools.length > 0 && <span className="text-[10px] text-teal-600 px-1">🗂️ CRM: {Array.from(new Set(m.tools)).join(', ')}</span>}
