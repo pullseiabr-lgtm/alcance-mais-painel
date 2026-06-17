@@ -57,6 +57,8 @@ const nav: NavSection[] = [
         tagColor: '#EC4899',
       },
       { href: '/campanhas', label: 'Campanhas', icon: <><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></> },
+      { href: '/disparos', label: 'Disparos · Contatos', icon: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>, tag: 'LGPD', tagColor: '#22C55E' },
+      { href: '/disparos-campanhas', label: 'Disparos · Campanhas', icon: <><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></>, tag: 'Novo', tagColor: '#25D366' },
     ],
   },
   {
@@ -74,8 +76,10 @@ const nav: NavSection[] = [
     items: [
       { href: '/financeiro', label: 'Financeiro', icon: <><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></> },
       { href: '/contratos', label: 'Contratos', icon: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></>, tag: 'Novo', tagColor: '#F59E0B' },
+      { href: '/documentos', label: 'Documentos', icon: <><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></>, tag: 'Novo', tagColor: '#6366F1' },
       { href: '/equipe', label: 'Equipe', icon: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></> },
       { href: '/relatorios', label: 'Relatórios', icon: <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></> },
+      { href: '/relatorio-pdf', label: 'Relatório PDF', icon: <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15h6M9 18h6M9 12h2"/></>, tag: 'IA', tagColor: '#22C55E' },
     ],
   },
   {
@@ -93,6 +97,13 @@ const nav: NavSection[] = [
   {
     sec: 'Agentes IA',
     items: [
+      {
+        href: '/maestro',
+        label: 'Maestro',
+        icon: <><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><path d="M19.07 4.93l-2.83 2.83M7.76 16.24l-2.83 2.83M19.07 19.07l-2.83-2.83M7.76 7.76L4.93 4.93"/></>,
+        tag: 'Orquestrador',
+        tagColor: '#0D9488',
+      },
       {
         href: '/agente-design',
         label: 'ARTE+ Designer',
@@ -120,6 +131,13 @@ const nav: NavSection[] = [
         icon: <><line x1="22" y1="12" x2="2" y2="12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/><line x1="6" y1="16" x2="6.01" y2="16"/><line x1="10" y1="16" x2="10.01" y2="16"/></>,
         tag: 'Meta/Google',
         tagColor: '#1877F2',
+      },
+      {
+        href: '/agente-esdras',
+        label: 'Agente Esdras',
+        icon: <><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></>,
+        tag: '24h',
+        tagColor: '#25D366',
       },
     ],
   },

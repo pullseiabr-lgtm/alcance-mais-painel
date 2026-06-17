@@ -175,6 +175,64 @@ export interface DashboardKPIs {
   valorPipelineTotal: number
 }
 
+export type ContatoStatus = 'ativo' | 'cancelado' | 'bloqueado'
+export type ContatoOrigem = 'qr_code' | 'wifi' | 'delivery' | 'site' | 'instagram' | 'presencial' | 'manual' | 'importacao'
+export interface ContatoMkt {
+  id: string
+  cliente_id: string | null
+  cliente_nome: string | null
+  nome: string
+  telefone: string
+  email: string | null
+  origem: ContatoOrigem | null
+  consentimento: boolean
+  data_optin: string | null
+  data_optout: string | null
+  status: ContatoStatus
+  aniversario: string | null
+  ultima_compra: string | null
+  ticket_medio: number
+  total_pedidos: number
+  categoria_favorita: string | null
+  tags: string[]
+  observacoes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type DisparoTipo = 'texto' | 'imagem' | 'video' | 'documento' | 'link'
+export type DisparoStatus = 'rascunho' | 'enviando' | 'pausado' | 'concluido'
+export interface Disparo {
+  id: string
+  cliente_id: string | null
+  cliente_nome: string | null
+  nome: string
+  tipo: DisparoTipo
+  mensagem: string
+  media_url: string | null
+  file_name: string | null
+  total: number
+  enviados: number
+  falhas: number
+  status: DisparoStatus
+  lote: number
+  intervalo_seg: number
+  created_at: string
+  updated_at: string
+}
+export type EnvioStatus = 'pendente' | 'enviado' | 'falha' | 'cancelado'
+export interface DisparoEnvio {
+  id: string
+  disparo_id: string
+  contato_id: string | null
+  telefone: string
+  nome: string | null
+  status: EnvioStatus
+  erro: string | null
+  enviado_em: string | null
+  created_at: string
+}
+
 export interface BrandKit {
   id: string
   cliente_id: string | null
@@ -319,5 +377,28 @@ export const db = {
     criar:    (data: any) => createClient().from('aprovacoes_pecas').insert(data).select().single(),
     atualizar:(id: string, data: any) => createClient().from('aprovacoes_pecas').update(data).eq('id', id).select().single(),
     deletar:  (id: string) => createClient().from('aprovacoes_pecas').delete().eq('id', id),
+  },
+  contatos: {
+    listar:   () => createClient().from('mkt_contatos').select('*').order('created_at', { ascending: false }),
+    criar:    (data: Omit<ContatoMkt,'id'|'created_at'|'updated_at'>) => createClient().from('mkt_contatos').insert(data).select().single(),
+    atualizar:(id: string, data: Partial<ContatoMkt>) => createClient().from('mkt_contatos').update({ ...data, updated_at: new Date().toISOString() }).eq('id', id).select().single(),
+    deletar:  (id: string) => createClient().from('mkt_contatos').delete().eq('id', id),
+    importar: (data: Omit<ContatoMkt,'id'|'created_at'|'updated_at'>[]) => createClient().from('mkt_contatos').upsert(data, { onConflict: 'telefone', ignoreDuplicates: true }).select(),
+    ativos:   (clienteId?: string | null) => {
+      let q = createClient().from('mkt_contatos').select('*').eq('status', 'ativo')
+      if (clienteId) q = q.eq('cliente_id', clienteId)
+      return q
+    },
+  },
+  disparos: {
+    listar:   () => createClient().from('disparos').select('*').order('created_at', { ascending: false }),
+    criar:    (data: Omit<Disparo,'id'|'created_at'|'updated_at'>) => createClient().from('disparos').insert(data).select().single(),
+    atualizar:(id: string, data: Partial<Disparo>) => createClient().from('disparos').update({ ...data, updated_at: new Date().toISOString() }).eq('id', id).select().single(),
+    deletar:  (id: string) => createClient().from('disparos').delete().eq('id', id),
+    obter:    (id: string) => createClient().from('disparos').select('*').eq('id', id).single(),
+  },
+  disparoEnvios: {
+    criarLote: (data: Omit<DisparoEnvio,'id'|'created_at'>[]) => createClient().from('disparo_envios').insert(data).select(),
+    porDisparo:(disparoId: string) => createClient().from('disparo_envios').select('*').eq('disparo_id', disparoId),
   },
 }
