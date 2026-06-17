@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+export const dynamic = 'force-dynamic'
+
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
 const rand = (a: number, b: number) => Math.floor(Math.random() * (b - a + 1)) + a
@@ -40,6 +44,7 @@ async function enviarEvolution(tipo: string, mensagem: string, mediaUrl: string 
 
 export async function POST(req: NextRequest) {
   try {
+    const supabase = getSupabase()
     const { disparo_id, tamanho = 12 } = await req.json()
     if (!disparo_id) return NextResponse.json({ error: 'disparo_id obrigatório' }, { status: 400 })
 
