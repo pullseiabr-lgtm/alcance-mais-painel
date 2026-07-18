@@ -1,6 +1,9 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+
+const BK = '#0a0b10', CARD = '#14161e', TXT = '#f0f3f7', MUT = '#9aa6b2', TEAL = '#00C4B4'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -10,9 +13,7 @@ export default function LoginPage() {
   const router = useRouter()
 
   async function login(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setErro('')
+    e.preventDefault(); setLoading(true); setErro('')
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
@@ -20,79 +21,48 @@ export default function LoginPage() {
         body: JSON.stringify({ email, senha }),
       })
       const data = await res.json()
-      if (!res.ok) {
-        setErro(data.error ?? 'E-mail ou senha inválidos.')
-        setLoading(false)
-      } else {
-        router.push('/')
-        router.refresh()
-      }
-    } catch {
-      setErro('Erro de conexão. Tente novamente.')
-      setLoading(false)
-    }
+      if (!res.ok) { setErro(data.error ?? 'E-mail ou senha inválidos.'); setLoading(false) }
+      else { router.push('/painel'); router.refresh() }
+    } catch { setErro('Erro de conexão.'); setLoading(false) }
   }
 
+  const Logo = ({ s = 40 }: { s?: number }) => (
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 2, fontWeight: 900, fontSize: s, letterSpacing: '-.02em', fontStyle: 'italic' }}>
+      <span style={{ color: '#fff' }}>ALCANCE</span>
+      <span style={{ background: 'linear-gradient(135deg,#F59E0B,#EC4899,#7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontSize: s * 1.15 }}>+7</span>
+    </div>
+  )
+
+  const input: React.CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '11px 13px', borderRadius: 9, border: '1px solid #ffffff22', background: '#0a0b10', color: '#fff', fontSize: 14 }
+  const btnP: React.CSSProperties = { background: TEAL, color: '#04201d', border: 'none', borderRadius: 999, padding: '13px 28px', fontWeight: 800, fontSize: 15, cursor: 'pointer', boxShadow: `0 8px 28px ${TEAL}44` }
+
   return (
-    <div className="login-wrap">
-      <div className="login-box">
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-            <div className="logo-box" style={{ width: 52, height: 52 }}>
-              <span style={{ fontWeight: 900, fontSize: 26, color: '#fff' }}>A</span>
-            </div>
-          </div>
-          <div style={{ fontSize: 24, fontWeight: 900, color: 'var(--wh)' }}>
-            Alcance<span style={{ color: 'var(--al)' }}>+</span>
-          </div>
-          <div style={{ fontSize: 11, color: 'var(--gr3)', marginTop: 4 }}>Sistema de Gestão da Agência</div>
+    <div style={{ background: BK, color: TXT, fontFamily: 'system-ui,"Plus Jakarta Sans",sans-serif', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, position: 'relative', overflow: 'hidden' }}>
+      {/* brilhos de fundo */}
+      <div style={{ position: 'absolute', top: -80, left: -60, width: 360, height: 360, borderRadius: '50%', background: '#7C3AED33', filter: 'blur(90px)' }} />
+      <div style={{ position: 'absolute', bottom: -60, right: -40, width: 320, height: 320, borderRadius: '50%', background: '#00C4B426', filter: 'blur(90px)' }} />
+
+      <div style={{ position: 'relative', background: CARD, border: '1px solid #ffffff1a', borderRadius: 18, padding: 34, width: 400, maxWidth: '100%' }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}><Logo s={40} /></div>
+          <div style={{ fontSize: 13, color: MUT, marginTop: 6 }}>Acesso ao sistema de gestão</div>
         </div>
 
         <form onSubmit={login} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div className="field">
-            <label>E-mail</label>
-            <input
-              className="inp"
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="seu@email.com"
-              required
-              autoFocus
-            />
+          <div>
+            <label style={{ fontSize: 12, color: MUT, display: 'block', marginBottom: 5 }}>E-mail</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" required autoFocus style={input} />
           </div>
-          <div className="field">
-            <label>Senha</label>
-            <input
-              className="inp"
-              type="password"
-              value={senha}
-              onChange={e => setSenha(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
+          <div>
+            <label style={{ fontSize: 12, color: MUT, display: 'block', marginBottom: 5 }}>Senha</label>
+            <input type="password" value={senha} onChange={e => setSenha(e.target.value)} placeholder="••••••••" required style={input} />
           </div>
-          {erro && (
-            <div style={{
-              fontSize: 11, color: 'var(--er)', padding: '8px 12px',
-              background: 'rgba(239,68,68,.1)', borderRadius: 'var(--r)',
-              border: '1px solid rgba(239,68,68,.2)',
-            }}>
-              {erro}
-            </div>
-          )}
-          <button
-            type="submit"
-            className="btn btn-al"
-            style={{ width: '100%', justifyContent: 'center', padding: '10px', fontSize: 13, marginTop: 4 }}
-            disabled={loading}
-          >
-            {loading ? 'Entrando...' : 'Entrar'}
-          </button>
+          {erro && <div style={{ fontSize: 12, color: '#fca5a5', padding: '8px 12px', background: 'rgba(239,68,68,.12)', borderRadius: 8 }}>{erro}</div>}
+          <button type="submit" disabled={loading} style={{ ...btnP, width: '100%', marginTop: 4, opacity: loading ? .7 : 1 }}>{loading ? 'Entrando…' : 'Entrar'}</button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: 20, fontSize: 10, color: 'var(--gr3)' }}>
-          Alcance+ Agência de Marketing — Sistema interno
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <Link href="/" style={{ color: MUT, fontSize: 12, textDecoration: 'none' }}>← Voltar ao site</Link>
         </div>
       </div>
     </div>

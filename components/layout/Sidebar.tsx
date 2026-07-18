@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
 type NavItem = {
   href: string
@@ -20,7 +21,7 @@ const nav: NavSection[] = [
   {
     sec: 'Principal',
     items: [
-      { href: '/', label: 'Dashboard', icon: <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></> },
+      { href: '/painel', label: 'Dashboard', icon: <><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></> },
       { href: '/pipeline', label: 'Pipeline', icon: <><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></>, tag: 'Kanban', tagColor: 'var(--al)' },
     ],
   },
@@ -57,8 +58,14 @@ const nav: NavSection[] = [
         tagColor: '#EC4899',
       },
       { href: '/campanhas', label: 'Campanhas', icon: <><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></> },
+      { href: '/ideias', label: 'Pauta IA · Ideias', icon: <><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1V17h6v-.2c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2z"/></>, tag: 'Novo', tagColor: '#F59E0B' },
+      { href: '/createfy', label: 'Createfy · Carrosséis', icon: <><rect x="2" y="4" width="14" height="16" rx="2"/><path d="M18 6h2a2 2 0 0 1 2 2v8"/><path d="M6 9h6M6 13h4"/></>, tag: 'IA', tagColor: '#7C3AED' },
+      { href: '/galeria-conteudo', label: 'Galeria de Conteúdo', icon: <><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></>, tag: 'Novo', tagColor: '#3B82F6' },
+      { href: '/artistas', label: 'Artistas', icon: <><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></>, tag: 'Carreiras', tagColor: '#EC4899' },
       { href: '/disparos', label: 'Disparos · Contatos', icon: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>, tag: 'LGPD', tagColor: '#22C55E' },
       { href: '/disparos-campanhas', label: 'Disparos · Campanhas', icon: <><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></>, tag: 'Novo', tagColor: '#25D366' },
+      { href: '/disparos-relatorio', label: 'Disparos · Relatório', icon: <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>, tag: 'CRM+IA', tagColor: '#0D9488' },
+      { href: '/bases-clientes', label: 'Bases por Cliente', icon: <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>, tag: 'Multi', tagColor: '#8B5CF6' },
     ],
   },
   {
@@ -103,6 +110,13 @@ const nav: NavSection[] = [
         icon: <><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><path d="M19.07 4.93l-2.83 2.83M7.76 16.24l-2.83 2.83M19.07 19.07l-2.83-2.83M7.76 7.76L4.93 4.93"/></>,
         tag: 'Orquestrador',
         tagColor: '#0D9488',
+      },
+      {
+        href: '/raio-x',
+        label: 'Growth Hunter',
+        icon: <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></>,
+        tag: 'Raio-X',
+        tagColor: '#EC4899',
       },
       {
         href: '/agente-design',
@@ -241,9 +255,37 @@ const nav: NavSection[] = [
 
 export default function Sidebar() {
   const path = usePathname()
+  const [open, setOpen] = useState(false)
+
+  // fecha o menu ao trocar de página (no celular)
+  useEffect(() => { setOpen(false) }, [path])
+
+  // trava o scroll do body quando o menu está aberto no celular
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [open])
 
   return (
-    <aside className="sidebar">
+    <>
+      {/* Topbar móvel (só aparece no celular via CSS) */}
+      <header className="mobile-bar">
+        <button className="mobile-burger" onClick={() => setOpen(true)} aria-label="Abrir menu">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div className="mobile-logo">
+          <div className="logo-box" style={{ width: 28, height: 28 }}><span className="logo-n" style={{ fontSize: 15 }}>A</span></div>
+          <span className="logo-txt" style={{ fontSize: 15 }}>Alcance<span className="logo-plus">+</span></span>
+        </div>
+      </header>
+
+      {/* Overlay escuro atrás do menu no celular */}
+      {open && <div className="sb-overlay" onClick={() => setOpen(false)} />}
+
+    <aside className={`sidebar${open ? ' sb-open' : ''}`}>
+      <button className="sb-close" onClick={() => setOpen(false)} aria-label="Fechar menu">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
       <div className="sb-brand">
         <div className="logo">
           <div className="logo-box">
@@ -294,5 +336,6 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+    </>
   )
 }
