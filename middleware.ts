@@ -28,6 +28,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/login') ||       // tela de acesso ao sistema
     pathname.startsWith('/artistas') ||    // landings públicas de artistas + agente de contratação
     pathname.startsWith('/api/artistas') ||
+    pathname === '/a7' || pathname.startsWith('/a7/') || // portal do cliente (A7) — a própria página/API valida a sessão
+    pathname.startsWith('/api/a7') ||
     publicApi.some(p => pathname.startsWith(p))
 
   // Dev bypass — entra direto sem login

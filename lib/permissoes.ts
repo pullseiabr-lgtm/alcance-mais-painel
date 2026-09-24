@@ -5,6 +5,7 @@ export const PAGINAS = [
   { id: 'pipeline',      label: 'Pipeline',           path: '/pipeline',       secao: 'Principal' },
   { id: 'clientes',      label: 'Clientes',           path: '/clientes',       secao: 'Clientes' },
   { id: 'propostas',     label: 'Propostas',          path: '/propostas',      secao: 'Clientes' },
+  { id: 'a7-gestao',     label: 'A7 · Portal do Cliente', path: '/a7-gestao',  secao: 'Clientes' },
   { id: 'projetos',      label: 'Projetos',           path: '/projetos',       secao: 'Operações' },
   { id: 'campanhas',     label: 'Campanhas',          path: '/campanhas',      secao: 'Operações' },
   { id: 'trafego',       label: 'Tráfego (Growth AI)', path: '/trafego',       secao: 'Operações' },
@@ -27,7 +28,7 @@ export type PageId = typeof PAGINAS[number]['id']
 export const PERMISSOES_PADRAO: Record<Role, PageId[]> = {
   admin: PAGINAS.map(p => p.id) as PageId[],
   gestor: [
-    'dashboard','pipeline','clientes','propostas','projetos',
+    'dashboard','pipeline','clientes','propostas','a7-gestao','projetos',
     'campanhas','trafego','calendario','financeiro','equipe','relatorios','agente',
   ],
   criativo: [
